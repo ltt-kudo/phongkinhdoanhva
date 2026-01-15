@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Vé - Hệ Thống In & Kiểm Soát</title>
+    <title>Quản Lý Vé - Fix Lỗi Nhập Liệu HS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -23,335 +23,594 @@
             body { background-color: white; font-size: 11pt; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            .unit-wrapper { page-break-after: always; margin-bottom: 0 !important; }
-            @page { margin: 0.5cm; size: A4; }
+            .unit-wrapper { page-break-after: always; margin-bottom: 0 !important; border: none !important; box-shadow: none !important; }
+            .unit-wrapper:last-child { page-break-after: auto; }
+            .session-print-group { page-break-after: always; }
+            .session-print-group:last-child { page-break-after: auto; }
+            
+            .unit-header-print { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+            .unit-header-print h1 { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0; }
+            .unit-header-print p { font-size: 10pt; font-style: italic; margin: 5px 0 0 0; }
+            
+            .level-header { color: #000 !important; border-bottom: 1px solid #000 !important; margin-top: 0px !important; padding-top: 10px; page-break-after: avoid; }
+            
+            .print-footer-grid { display: grid !important; grid-template-columns: 1fr 1fr; width: 100%; margin-top: 30px; margin-bottom: 10px; page-break-inside: avoid; }
+            .print-footer-item { text-align: center; }
+            
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid black !important; padding: 4px 8px !important; text-align: left; color: black !important; font-size: 10pt; }
+            thead { display: table-header-group; background-color: #eee !important; -webkit-print-color-adjust: exact; }
+            
+            .action-col { display: none; }
+            .session-block { page-break-inside: auto; margin-bottom: 15px !important; }
+            .bg-red-50 { background-color: transparent !important; }
+            .text-red-600 { color: black !important; font-style: italic; font-weight: bold; }
         }
+        .print-only { display: none; }
         
-        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
-        .tab-inactive { color: #6b7280; }
-        .tab-inactive:hover { color: #374151; }
+        .nav-tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+        .nav-tab-inactive { border-bottom: 2px solid transparent; color: #6b7280; font-weight: 500; }
+        .sub-tab-active { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .sub-tab-inactive { background-color: white; color: #4b5563; border: 1px solid #d1d5db; }
+
+        /* Modal Styles */
+        #changeSessionModal, #directSaleModal { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="text-gray-800">
 
-    <!-- Header / Navbar -->
-    <header class="bg-white shadow-sm border-b border-gray-200 no-print sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-2 rounded-lg text-white">
-                        <i data-lucide="ticket" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-900">Quản Lý Vé</h1>
-                        <p class="text-xs text-gray-500">Hệ thống xuất & kiểm soát vé</p>
-                    </div>
+    <!-- HEADER & CONTROLS -->
+    <div class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <div class="mb-4">
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Hệ Thống Quản Lý Vé</h1>
+            <p class="text-sm text-gray-500 mt-1">Sắp xếp: <b>Đơn vị &rarr; Cấp học &rarr; Suất</b></p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6 relative group z-50">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i data-lucide="search" class="h-6 w-6 text-gray-400"></i>
+            </div>
+            <input type="text" id="globalSearchInput" oninput="handleGlobalSearch(this.value)" 
+                class="block w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg shadow-sm transition duration-150 ease-in-out" 
+                placeholder="Nhập tên, số điện thoại hoặc mã đơn vị để tìm kiếm nhanh & Check-in...">
+            
+            <div id="searchResults" class="absolute z-50 mt-2 w-full bg-white shadow-2xl rounded-xl py-2 text-base ring-1 ring-black ring-opacity-5 overflow-auto max-h-[600px] hidden border border-gray-200"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 justify-end items-center border-t border-gray-200 pt-4">
+            <button onclick="openDirectSaleModal()" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-bold border border-blue-600">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                <span>Bán Vé Tại Quầy</span>
+            </button>
+
+            <div class="h-8 w-px bg-gray-300 mx-2"></div>
+
+            <button onclick="handlePrintSessionManifest()" class="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-medium">
+                <i data-lucide="list-tree" class="w-4 h-4"></i>
+                <span>In DS Theo Suất</span>
+            </button>
+
+            <button onclick="handlePrintHandover()" id="btnPrintHandover" class="hidden bg-white text-orange-700 border border-orange-200 hover:bg-orange-50 px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-medium">
+                <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                <span>In Phiếu Bàn Giao</span>
+            </button>
+
+            <button onclick="handleExportListHTML()" class="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-medium">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                <span>Xuất Báo Cáo HTML</span>
+            </button>
+
+            <button onclick="handleSaveOfflineFile()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-medium">
+                <i data-lucide="package" class="w-4 h-4"></i>
+                <span>Lưu File Chạy Offline</span>
+            </button>
+
+            <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all text-sm font-medium">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>In Danh Sách</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN NAVIGATION -->
+    <div class="border-b border-gray-200 mb-6 mt-4">
+        <nav class="-mb-px flex space-x-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Tabs">
+            <button onclick="switchMainTab('dashboard')" id="navDashboard" class="nav-tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>Tổng Quan</button>
+            <button onclick="switchMainTab('student')" id="navStudent" class="nav-tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2"><i data-lucide="graduation-cap" class="w-4 h-4"></i>Danh Sách Học Sinh / Khách Lẻ</button>
+            <button onclick="switchMainTab('staff')" id="navStaff" class="nav-tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2"><i data-lucide="briefcase" class="w-4 h-4"></i>Danh Sách CBNV</button>
+            <button onclick="switchMainTab('gift')" id="navGift" class="nav-tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 relative">
+                <i data-lucide="gift" class="w-4 h-4"></i>CBNV Tặng Vé
+                <span id="warningBadge" class="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">!</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboardContent" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-indigo-100 flex items-center justify-between relative overflow-hidden">
+                <div class="absolute right-0 top-0 h-full w-1 bg-indigo-500"></div>
+                <div>
+                    <p class="text-sm font-medium text-gray-500 uppercase">Tổng Vé Đã Đặt</p>
+                    <h3 class="text-3xl font-bold text-indigo-700 mt-1" id="dashTotalReg">0</h3>
+                    <p class="text-xs text-gray-400 mt-1">Bao gồm vé chưa thanh toán</p>
                 </div>
-                <div class="flex items-center gap-4">
-                     <button onclick="document.getElementById('csvFile').click()" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Nhập Excel/CSV
-                    </button>
-                    <input type="file" id="csvFile" accept=".csv" class="hidden" onchange="handleFileUpload(this)">
-                    <button onclick="window.print()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                        <i data-lucide="printer" class="w-4 h-4"></i> In Phiếu
-                    </button>
+                <div class="p-3 bg-indigo-50 rounded-full text-indigo-600"><i data-lucide="ticket" class="w-8 h-8"></i></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-emerald-100 flex items-center justify-between relative overflow-hidden">
+                <div class="absolute right-0 top-0 h-full w-1 bg-emerald-500"></div>
+                <div><p class="text-sm font-medium text-gray-500 uppercase">Tổng Vé Đã Xuất</p><h3 class="text-3xl font-bold text-emerald-700 mt-1" id="dashTotalDelivered">0</h3><p class="text-xs text-gray-400 mt-1">Đã giao thực tế</p></div>
+                <div class="p-3 bg-emerald-50 rounded-full text-emerald-600"><i data-lucide="check-circle-2" class="w-8 h-8"></i></div>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-red-100 flex items-center justify-between relative overflow-hidden">
+                <div class="absolute right-0 top-0 h-full w-1 bg-red-500"></div>
+                <div><p class="text-sm font-medium text-gray-500 uppercase">Vé chưa thanh toán</p><h3 class="text-3xl font-bold text-red-700 mt-1" id="dashTotalUnpaid">0</h3><p class="text-xs text-gray-400 mt-1">Cần xử lý ngay</p></div>
+                <div class="p-3 bg-red-50 rounded-full text-red-600"><i data-lucide="alert-circle" class="w-8 h-8"></i></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-5 h-5 text-indigo-600"></i>Thống Kê Theo Suất Diễn</h2>
+            </div>
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3">Suất (Thời gian)</th>
+                        <th class="px-6 py-3 text-center">Tổng Vé Đặt</th>
+                        <th class="px-6 py-3 text-center text-emerald-600">Đã Giao</th>
+                        <th class="px-6 py-3 text-center text-orange-600">Chưa Giao</th>
+                        <th class="px-6 py-3 text-right">Tỷ Lệ Giao</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200" id="sessionStatsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200"><h2 class="text-lg font-bold text-gray-800">Chi Tiết Theo Nhóm</h2></div>
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr><th class="px-6 py-3">Nhóm</th><th class="px-6 py-3 text-center">Tổng Suất</th><th class="px-6 py-3 text-center">Đã Giao</th><th class="px-6 py-3 text-center text-red-600">Còn Lại</th><th class="px-6 py-3 text-right">Tỷ Lệ</th></tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200" id="summaryTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- LIST CONTROLS -->
+    <div id="listControls" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 hidden max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center">
+                <div class="flex gap-2" id="subTabContainer">
+                    <button onclick="switchSubTab('deliver')" id="btnDeliver" class="sub-tab-active px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2"><i data-lucide="clipboard-check" class="w-4 h-4"></i> Giao Vé</button>
+                    <button onclick="switchSubTab('unpaid')" id="btnUnpaid" class="sub-tab-inactive px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2"><i data-lucide="phone-outgoing" class="w-4 h-4"></i> Nhắc Thanh Toán <span id="badgeUnpaid" class="ml-1 bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-700 bg-orange-50 px-3 py-1.5 rounded-md border border-orange-200">
+                    <i data-lucide="type" class="w-4 h-4 text-orange-600"></i>
+                    <select id="encodingSelect" onchange="retryLastUpload()" class="bg-transparent border-none focus:ring-0 text-gray-700 font-medium cursor-pointer outline-none">
+                        <option value="UTF-8">Mã: UTF-8 (Chuẩn)</option>
+                        <option value="windows-1258">Mã: Windows-1258 (Excel VN)</option>
+                        <option value="ISO-8859-1">Mã: ISO-8859-1 (Latin)</option>
+                        <option value="UTF-16LE">Mã: UTF-16LE (Excel Unicode)</option>
+                    </select>
                 </div>
             </div>
+            <!-- Uploaders -->
+            <div id="uploadAreaStudent" class="upload-area flex items-center gap-2"><span class="text-sm text-gray-500 hidden md:inline">Dữ liệu Học sinh:</span><label class="cursor-pointer bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-md border border-indigo-200 text-sm font-medium flex items-center gap-2 transition-all"><i data-lucide="upload" class="w-4 h-4"></i> Tải CSV Học Sinh<input type="file" accept=".csv" class="hidden" onchange="handleStudentUpload(event)"></label></div>
+            <div id="uploadAreaStaff" class="upload-area flex items-center gap-2 hidden"><span class="text-sm text-gray-500 hidden md:inline">Dữ liệu CBNV:</span><label class="cursor-pointer bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-md border border-emerald-200 text-sm font-medium flex items-center gap-2 transition-all"><i data-lucide="upload" class="w-4 h-4"></i> Tải CSV CBNV<input type="file" accept=".csv" class="hidden" onchange="handleStaffUpload(event)"></label></div>
+            <div id="uploadAreaGift" class="upload-area flex items-center gap-2 hidden"><span class="text-sm text-gray-500 hidden md:inline">Dữ liệu CBNV Tặng:</span><label class="cursor-pointer bg-pink-50 text-pink-700 hover:bg-pink-100 px-3 py-1.5 rounded-md border border-pink-200 text-sm font-medium flex items-center gap-2 transition-all"><i data-lucide="upload" class="w-4 h-4"></i> Tải CSV Tặng<input type="file" accept=".csv" class="hidden" onchange="handleGiftUpload(event)"></label></div>
         </div>
         
-        <!-- Tabs -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
-            <div class="flex gap-6 border-b border-gray-200 overflow-x-auto">
-                <button onclick="switchMainTab('gift')" id="tab-gift" class="pb-3 px-1 text-sm tab-active flex items-center gap-2">
-                    <i data-lucide="gift" class="w-4 h-4"></i> Quản lý Quà Tặng
-                </button>
-                <button onclick="switchMainTab('stats')" id="tab-stats" class="pb-3 px-1 text-sm tab-inactive flex items-center gap-2">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Thống Kê
-                </button>
+        <div id="giftInfoNote" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800 flex flex-col gap-1">
+            <div class="flex items-center gap-2 font-bold"><i data-lucide="info" class="w-4 h-4"></i> QUY ĐỊNH TẶNG VÉ:</div>
+            <ul class="list-disc list-inside pl-2 space-y-1">
+                <li><b>2 Vé:</b> Giám đốc, Chủ tịch (HĐQT/HĐ), Hiệu trưởng.</li>
+                <li><b>1 Vé:</b> Phó Hiệu trưởng/Hiệu phó, Trưởng/Phó phòng, Kế toán trưởng, GVCN.</li>
+                <li><b>Lưu ý:</b> Cột "Đã nhận" hiển thị số lượng thực tế đã phát. Cột "Còn lại" hiển thị số lượng cần phát bù.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="localStats" class="grid grid-cols-3 gap-4 mb-2 hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center"><span class="text-xs text-gray-500 uppercase font-semibold">Đang hiển thị (Người)</span><span class="text-2xl font-bold text-gray-900 mt-1" id="statValue1">0</span></div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center"><span class="text-xs text-gray-500 uppercase font-semibold">Đang hiển thị (Vé)</span><span class="text-2xl font-bold text-gray-900 mt-1" id="statValue2">0</span></div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-center"><span class="text-xs text-gray-500 uppercase font-semibold" id="statLabel3">Nhóm / Đơn vị</span><span class="text-2xl font-bold text-gray-900 mt-1" id="statValue3">0</span></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 print-container" id="tablesContainer"></div>
+
+    <!-- MODALS -->
+    <div id="directSaleModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="bg-blue-700 px-4 py-3 flex justify-between items-center text-white"><h3 class="font-bold text-lg">Bán Vé Tại Quầy</h3><button onclick="closeDirectSaleModal()"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <input type="text" id="dsName" class="block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Họ tên khách hàng">
+                <input type="text" id="dsPhone" class="block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Số điện thoại">
+                <div class="flex gap-4">
+                    <input type="number" id="dsQty" value="1" min="1" class="block w-1/3 border border-gray-300 rounded-md px-3 py-2 font-bold text-blue-700">
+                    <select id="dsSession" class="block w-2/3 border border-gray-300 rounded-md px-3 py-2"><option value="19:00 ngày 14/1/2026">19:00 ngày 14/1/2026</option><option value="19:00 ngày 15/1/2026">19:00 ngày 15/1/2026</option></select>
+                </div>
+                <button onclick="handleDirectSale()" class="w-full px-4 py-2 bg-blue-700 text-white rounded-md font-bold">Hoàn Tất</button>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Gift Management Tab -->
-        <div id="view-gift" class="space-y-6">
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Tổng phiếu</p>
-                            <h3 class="text-2xl font-bold text-gray-900 mt-1" id="total-tickets">0</h3>
-                        </div>
-                        <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                            <i data-lucide="files" class="w-5 h-5"></i>
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Đã phát</p>
-                            <h3 class="text-2xl font-bold text-green-600 mt-1" id="total-delivered">0</h3>
-                        </div>
-                        <span class="p-2 bg-green-50 text-green-600 rounded-lg">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i>
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Còn lại</p>
-                            <h3 class="text-2xl font-bold text-orange-600 mt-1" id="total-remaining">0</h3>
-                        </div>
-                        <span class="p-2 bg-orange-50 text-orange-600 rounded-lg">
-                            <i data-lucide="package-open" class="w-5 h-5"></i>
-                        </span>
-                    </div>
-                </div>
-                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Tỷ lệ hoàn thành</p>
-                            <h3 class="text-2xl font-bold text-purple-600 mt-1" id="completion-rate">0%</h3>
-                        </div>
-                        <span class="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                            <i data-lucide="pie-chart" class="w-5 h-5"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- List -->
-            <div id="gift-list" class="space-y-4">
-                <div class="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-                    <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-gray-400 mb-3"></i>
-                    <p class="font-medium">Chưa có dữ liệu</p>
-                    <p class="text-sm mt-1">Vui lòng nhập file CSV để bắt đầu</p>
-                </div>
+    <div id="changeSessionModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center text-white"><h3 class="font-bold">Đổi Suất</h3><button onclick="closeChangeSessionModal()"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <p id="modalCustomerName" class="font-bold text-lg"></p>
+                <select id="modalNewSessionSelect" class="block w-full border border-gray-300 rounded-md px-3 py-2"><option value="19:00 ngày 14/1/2026">19:00 ngày 14/1/2026</option><option value="19:00 ngày 15/1/2026">19:00 ngày 15/1/2026</option></select>
+                <button onclick="saveSessionChange()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md font-medium">Lưu</button>
             </div>
         </div>
+    </div>
 
-        <!-- Stats Tab -->
-        <div id="view-stats" class="hidden">
-             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Thống Kê Chi Tiết</h3>
+    <div id="checkInQuantityModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="bg-green-600 px-4 py-3 flex justify-between items-center text-white"><h3 class="font-bold">Nhận Vé</h3><button onclick="closeCheckInQuantityModal()"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600">Khách hàng: <b id="ciName" class="text-gray-900"></b></p>
+                <div class="bg-gray-100 p-3 rounded text-sm">
+                    <div class="flex justify-between"><span>Tiêu chuẩn:</span> <b id="ciQuota"></b></div>
+                    <div class="flex justify-between"><span>Đã nhận:</span> <b id="ciDelivered"></b></div>
+                    <div class="flex justify-between text-green-700 font-bold border-t border-gray-300 mt-1 pt-1"><span>Còn lại:</span> <b id="ciRemaining"></b></div>
                 </div>
-                <div class="p-6">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phân loại</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã phát</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tỷ lệ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200" id="stats-table-body">
-                                <!-- Generated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số lượng nhận lần này:</label>
+                    <input type="number" id="ciQtyInput" class="block w-full border border-gray-300 rounded-md px-3 py-2 text-lg font-bold text-green-700 text-center" min="1">
                 </div>
+                <button onclick="submitCheckInQuantity()" class="w-full px-4 py-2 bg-green-600 text-white rounded-md font-bold">Xác Nhận</button>
             </div>
         </div>
-
-    </main>
+    </div>
 
     <script>
-        // --- LOGIC XỬ LÝ DỮ LIỆU ---
-        let giftData = [];
-
-        // Khởi tạo icons
         lucide.createIcons();
 
-        function switchMainTab(tab) {
-            document.getElementById('view-gift').classList.add('hidden');
-            document.getElementById('view-stats').classList.add('hidden');
-            document.getElementById('tab-gift').className = "pb-3 px-1 text-sm tab-inactive flex items-center gap-2";
-            document.getElementById('tab-stats').className = "pb-3 px-1 text-sm tab-inactive flex items-center gap-2";
+        // --- STATE ---
+        let studentData = [
+            { parentName: "Phụ huynh A", phone: "0901234567", studentName: "Nguyễn Văn An", class: "1A", school: "VA Tân Bình", qty: 2, session: "19:00 ngày 15/1/2026", paidDate: "ck 12/1", delivered: "" },
+            { parentName: "Phụ huynh B", phone: "0909999999", studentName: "Trần Thị Bé", class: "3B", school: "VA Tân Bình", qty: 3, session: "19:00 ngày 14/1/2026", paidDate: "ck 12/1", delivered: "" }
+        ];
+        let staffData = [
+            { name: "Mai Thị Thu Hiền", department: "Phòng đầu tư", qty: 1, session: "19:00 ngày 14/1/2026", paidDate: "ck 10/1/2026", delivered: "", phone: "0866870168" }
+        ];
+        let giftData = [
+            { name: "Nguyễn Thị Thu Thảo", title: "Phó hiệu trưởng", department: "Mầm non Vĩnh Hải", phone: "0373102137", deliveredQty: 1, quota: 1, session: "19:00 ngày 15/1/2026" },
+            { name: "Huỳnh Thị Kim Ngân", title: "Giáo viên tiếng Anh", department: "Tiểu học", phone: "0798759797", deliveredQty: 0, quota: 0, session: "19:00 ngày 14/1/2026" },
+            { name: "Nguyễn Văn A", title: "Giám đốc", department: "Ban Giám Đốc", phone: "0909090909", deliveredQty: 1, quota: 2, session: "19:00 ngày 15/1/2026" }, 
+            { name: "Trần Văn B", title: "GVCN Lớp 1", department: "Tiểu học", phone: "0908080808", deliveredQty: 1, quota: 1, session: "19:00 ngày 14/1/2026" } 
+        ];
 
-            if(tab === 'gift') {
-                document.getElementById('view-gift').classList.remove('hidden');
-                document.getElementById('tab-gift').className = "pb-3 px-1 text-sm tab-active flex items-center gap-2";
-            } else {
-                document.getElementById('view-stats').classList.remove('hidden');
-                document.getElementById('tab-stats').className = "pb-3 px-1 text-sm tab-active flex items-center gap-2";
-                renderStatsTable();
+        let lastUploadedFile = { type: null, file: null };
+        let currentMainTab = 'dashboard';
+        let currentSubTab = 'deliver'; 
+        const printDateStr = new Date().toLocaleDateString('vi-VN');
+        let currentEditItem = null;
+        let currentCheckInItem = null;
+
+        function init() {
+            giftData.forEach(item => item.quota = getGiftQuota(item.title));
+            calculateGlobalStats(); 
+            switchMainTab('dashboard'); 
+        }
+
+        // --- SAVE OFFLINE FUNCTION ---
+        function handleSaveOfflineFile() {
+            let htmlContent = document.documentElement.outerHTML;
+            const jsonStudent = JSON.stringify(studentData);
+            const jsonStaff = JSON.stringify(staffData);
+            const jsonGift = JSON.stringify(giftData);
+            
+            htmlContent = htmlContent.replace(/let studentData\s*=\s*\[[\s\S]*?\];/, `let studentData = ${jsonStudent};`);
+            htmlContent = htmlContent.replace(/let staffData\s*=\s*\[[\s\S]*?\];/, `let staffData = ${jsonStaff};`);
+            htmlContent = htmlContent.replace(/let giftData\s*=\s*\[[\s\S]*?\];/, `let giftData = ${jsonGift};`);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `QuanLyVe_Offline_${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("Đã đóng gói thành công! Dữ liệu hiện tại đã được lưu vào file HTML mới.");
+        }
+
+        // --- EXPORT REPORT HTML FUNCTION ---
+        function handleExportListHTML() {
+            const content = document.getElementById('tablesContainer').innerHTML;
+            if (!content || content.trim() === "") {
+                alert("Không có dữ liệu danh sách để xuất. Vui lòng chuyển sang tab danh sách hoặc thực hiện 'In Tổng Đã Nhận' trước.");
+                return;
+            }
+            const styles = document.getElementsByTagName('style')[0].innerHTML;
+            const title = `Danh Sách Vé - ${printDateStr}`;
+            const htmlString = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${title}</title><script src="https://cdn.tailwindcss.com"><\/script><script src="https://unpkg.com/lucide@latest"><\/script><style>${styles} body { background-color: white; padding: 20px; } .no-print { display: none !important; } .unit-wrapper { margin-bottom: 2rem !important; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); } .unit-header-print { display: block !important; text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; } .print-footer-grid { display: grid !important; grid-template-columns: 1fr 1fr; width: 100%; margin-top: 30px; } .print-only { display: block !important; } </style></head><body><div class="max-w-7xl mx-auto"><div class="text-center mb-8"><h1 class="text-2xl font-bold uppercase">HỒ SƠ QUẢN LÝ VÉ</h1><p class="italic text-sm">Xuất dữ liệu ngày: ${new Date().toLocaleString('vi-VN')}</p></div>${content}</div><script>lucide.createIcons();<\/script></body></html>`;
+            const blob = new Blob([htmlString], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `Danh_Sach_Ve_${new Date().toISOString().slice(0,10)}.html`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        // --- CHECK-IN & MODALS ---
+        function quickCheckIn(source, index) {
+            let item; if (source === 'student') item = studentData[index]; else if (source === 'staff') item = staffData[index]; else if (source === 'gift') item = giftData[index];
+            if (item) {
+                if (source === 'gift') {
+                    const remaining = item.quota - (item.deliveredQty || 0);
+                    if (remaining > 1) { openCheckInQuantityModal(index, item, remaining); return; }
+                    item.deliveredQty = (item.deliveredQty || 0) + 1;
+                } else { item.delivered = "X"; }
+                refreshAfterUpdate();
             }
         }
-
-        function getEncoding(file) { return "UTF-8"; } // Simplified for this context
-
-        function handleFileUpload(input) {
-            const f = input.files[0];
-            if(!f) return;
-            
-            const r = new FileReader();
-            r.onload = function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n');
-                
-                // Logic parse CSV
-                const d = []; 
-                let valid = 0, skipped = 0; 
-                
-                // Bắt đầu từ dòng 1 (bỏ qua header)
-                for(let i=1; i<rows.length; i++) { 
-                    const c = parseCSV(rows[i]); 
-                    if(c[1] && c[1].trim()) { 
-                        valid++; 
-                        const t = c[2] || ""; // Chức danh/Loại vé
-                        const q = getGiftQuota(t); 
-                        let dq = 0; 
-                        
-                        // Xử lý logic số lượng đã phát (cột 7)
-                        if(c[7] && c[7].match(/\d+/)) dq = parseInt(c[7].match(/\d+/)[0]); 
-                        else if(c[7] && c[7].toLowerCase() === 'x') dq = q; 
-                        
-                        d.push({
-                            name: toTitle(c[1]), 
-                            title: t, 
-                            department: c[3] || "", 
-                            phone: c[4] || "", 
-                            email: c[5] || "", 
-                            session: c[6] || "", 
-                            deliveredQty: dq, 
-                            quota: q
-                        }); 
-                    } else { 
-                        skipped++; 
-                    } 
-                } 
-                giftData = d; 
-                calculateGlobalStats(); 
-                renderGiftList();
-                switchMainTab('gift'); 
-                
-                // Thông báo kết quả
-                // Sử dụng setTimeout để UI update trước khi alert
-                setTimeout(() => {
-                    // alert(`Tìm thấy ${rows.length-1} dòng. Đã nhập ${valid} dòng. Bỏ qua ${skipped} dòng.`);
-                    // Thay alert bằng thông báo trong UI nếu có thể, ở đây dùng console cho sạch
-                    console.log(`Imported: ${valid}, Skipped: ${skipped}`);
-                }, 100);
-            }; 
-            r.readAsText(f, "UTF-8");
+        function openCheckInQuantityModal(index, item, remaining) {
+            currentCheckInItem = { index, item }; document.getElementById('ciName').innerText = item.name; document.getElementById('ciQuota').innerText = item.quota; document.getElementById('ciDelivered').innerText = item.deliveredQty || 0; document.getElementById('ciRemaining').innerText = remaining;
+            const input = document.getElementById('ciQtyInput'); input.value = remaining; input.max = remaining; document.getElementById('checkInQuantityModal').classList.remove('hidden'); input.focus();
+        }
+        function closeCheckInQuantityModal() { document.getElementById('checkInQuantityModal').classList.add('hidden'); currentCheckInItem = null; }
+        function submitCheckInQuantity() {
+            if (!currentCheckInItem) return;
+            const qty = parseInt(document.getElementById('ciQtyInput').value); const remaining = currentCheckInItem.item.quota - (currentCheckInItem.item.deliveredQty || 0);
+            if (qty > 0 && qty <= remaining) { giftData[currentCheckInItem.index].deliveredQty = (giftData[currentCheckInItem.index].deliveredQty || 0) + qty; closeCheckInQuantityModal(); refreshAfterUpdate(); } else { alert("Số lượng không hợp lệ!"); }
+        }
+        function refreshAfterUpdate() { calculateGlobalStats(); if (currentMainTab !== 'dashboard') render(); const searchInput = document.getElementById('globalSearchInput'); if (searchInput.value) handleGlobalSearch(searchInput.value); }
+        function openChangeSessionModal(source, index) {
+            let item = (source==='student'?studentData:(source==='staff'?staffData:giftData))[index]; currentEditItem = { source, index }; document.getElementById('modalCustomerName').innerText = item.name || item.studentName; document.getElementById('modalNewSessionSelect').value = (item.session||"").trim(); document.getElementById('changeSessionModal').classList.remove('hidden');
+        }
+        function closeChangeSessionModal() { document.getElementById('changeSessionModal').classList.add('hidden'); }
+        function saveSessionChange() {
+            const newS = document.getElementById('modalNewSessionSelect').value; if(currentEditItem.source==='student') studentData[currentEditItem.index].session=newS; else if(currentEditItem.source==='staff') staffData[currentEditItem.index].session=newS; else giftData[currentEditItem.index].session=newS;
+            closeChangeSessionModal(); refreshAfterUpdate(); alert(`Đã đổi suất thành công sang: ${newS}`);
+        }
+        function openDirectSaleModal() { document.getElementById('dsName').value = ''; document.getElementById('dsPhone').value = ''; document.getElementById('dsQty').value = 1; document.getElementById('directSaleModal').classList.remove('hidden'); document.getElementById('dsName').focus(); }
+        function closeDirectSaleModal() { document.getElementById('directSaleModal').classList.add('hidden'); }
+        function handleDirectSale() {
+            const name = document.getElementById('dsName').value.trim(); const phone = document.getElementById('dsPhone').value.trim(); const qty = parseInt(document.getElementById('dsQty').value); const session = document.getElementById('dsSession').value;
+            if (!name) return alert("Thiếu tên khách");
+            studentData.unshift({ studentName: toTitleCase(name), phone: phone, class: "MUA TẠI QUẦY", parentName: "Khách Lẻ", qty: qty, session: session, paidDate: "Tiền mặt", delivered: "X", school: "KHÁCH LẺ" });
+            closeDirectSaleModal(); refreshAfterUpdate(); alert(`Đã bán ${qty} vé cho ${name}. Dữ liệu đã lưu.`);
         }
 
-        function parseCSV(text) { 
-            // Regex xử lý CSV chuẩn (có thể có dấu phẩy trong ngoặc kép)
-            const re = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
-            return text.split(re).map(v => v.replace(/^"|"$/g, '').trim()); 
+        // --- SEARCH ---
+        function handleGlobalSearch(keyword) {
+            const resultsDiv = document.getElementById('searchResults'); const term = keyword.toLowerCase().trim(); if (term.length === 0) { resultsDiv.classList.add('hidden'); return; }
+            const allData = [ ...studentData.map((i, idx) => ({...i, type: 'Học sinh', source: 'student', originalIndex: idx})), ...staffData.map((i, idx) => ({...i, type: 'CBNV', source: 'staff', originalIndex: idx})), ...giftData.map((i, idx) => ({...i, type: 'Tặng', source: 'gift', originalIndex: idx})) ];
+            const matches = allData.filter(item => { const name = (item.name || item.studentName || "").toLowerCase(); const phone = (item.phone || "").toLowerCase(); return name.includes(term) || phone.includes(term); }).slice(0, 10);
+            if (matches.length > 0) {
+                let html = matches.map(item => {
+                    const name = item.name || item.studentName; const sub = item.class || item.department; const phone = item.phone || "---"; const session = item.session || "Chưa xếp suất";
+                    let status = "", color = "text-gray-600", isDelivered = false, qtyBadge = "";
+                    if (item.source === 'gift') {
+                        const rem = Math.max(0, item.quota - (item.deliveredQty || 0)); isDelivered = rem === 0; status = isDelivered ? "Đủ vé" : `Thiếu ${rem}`; color = isDelivered ? "text-green-600 font-bold" : "text-red-600 font-bold"; qtyBadge = `<span class="ml-auto bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded border border-purple-200">Tiêu chuẩn: ${item.quota}</span>`; if (rem > 0) qtyBadge += `<span class="ml-2 bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded border border-red-200">Cần giao: ${rem} vé</span>`;
+                    } else {
+                        isDelivered = (item.delivered && item.delivered.trim() !== ""); status = isDelivered ? "Đã giao" : "Chưa giao"; color = isDelivered ? "text-green-600 font-bold" : "text-orange-600 font-bold"; qtyBadge = `<span class="ml-auto bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded border border-blue-200">SL: ${item.qty} vé</span>`;
+                    }
+                    let checkInBtn = !isDelivered ? `<button onclick="quickCheckIn('${item.source}', ${item.originalIndex})" class="bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700 flex items-center gap-1 font-medium shadow-sm"><i data-lucide="check-square" class="w-3 h-3"></i> Nhận Vé</button>` : `<span class="text-green-600 text-xs flex items-center gap-1 font-medium"><i data-lucide="check" class="w-3 h-3"></i> Đã xong</span>`;
+                    return `<div class="px-4 py-3 hover:bg-gray-50 border-b last:border-0 transition-colors"><div class="flex justify-between items-center mb-1"><div class="font-semibold text-gray-900 text-sm flex items-center">${name} <span class="text-[10px] uppercase font-bold tracking-wider bg-gray-200 px-1.5 py-0.5 rounded text-gray-600 ml-2 border border-gray-300">${item.type}</span></div><div class="flex items-center">${qtyBadge}</div></div><div class="flex justify-between items-center mt-1"><div class="text-xs text-gray-500">${sub} • SĐT: ${phone}</div><div>${checkInBtn}</div></div><div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs"><span class="text-indigo-700 font-medium flex items-center gap-1.5 bg-indigo-50 px-2 py-1 rounded"><i data-lucide="calendar" class="w-3 h-3"></i> ${session}</span><button onclick="openChangeSessionModal('${item.source}', ${item.originalIndex})" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs hover:bg-indigo-100 flex items-center gap-1 ml-auto border border-indigo-200"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Đổi</button></div></div>`;
+                }).join(''); resultsDiv.innerHTML = html; resultsDiv.classList.remove('hidden'); lucide.createIcons();
+            } else { resultsDiv.innerHTML = `<div class="px-4 py-3 text-sm text-gray-500 text-center italic">Không tìm thấy kết quả phù hợp</div>`; resultsDiv.classList.remove('hidden'); }
+        }
+        document.addEventListener('click', e => { if(!e.target.closest('.group') && !document.getElementById('changeSessionModal').contains(e.target)) document.getElementById('searchResults').classList.add('hidden'); });
+
+        // --- PRINT HANDLERS ---
+        function handlePrintTotalDelivered() {
+            const allItems = [];
+            studentData.forEach(s => { if (s.delivered && s.delivered.trim() !== "") { allItems.push({ name: s.studentName, type: 'Học sinh', unit: s.class, qty: s.qty, session: (s.session || "Chưa xác định").trim() }); } });
+            staffData.forEach(s => { if (s.delivered && s.delivered.trim() !== "") { allItems.push({ name: s.name, type: 'CBNV', unit: s.department, qty: s.qty, session: (s.session || "Chưa xác định").trim() }); } });
+            giftData.forEach(s => { if (s.deliveredQty > 0) { allItems.push({ name: s.name, type: 'Vé Tặng', unit: s.department, qty: s.deliveredQty, session: (s.session || "Chưa xác định").trim() }); } });
+            if (allItems.length === 0) { alert("Chưa có vé nào được giao để in tổng hợp."); return; }
+            const grouped = {}; allItems.forEach(item => { if (!grouped[item.session]) grouped[item.session] = []; grouped[item.session].push(item); });
+            const container = document.getElementById('tablesContainer'); container.innerHTML = '';
+            Object.keys(grouped).sort().forEach(sessionName => {
+                const list = grouped[sessionName]; list.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+                const wrapper = document.createElement('div'); wrapper.className = "unit-wrapper session-print-group mb-12 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                const printHeader = `<div class="unit-header-print p-4 border-b border-gray-200 bg-blue-50"><h1 class="text-xl text-blue-900 uppercase">SUẤT: ${sessionName}</h1><p>Danh sách tổng hợp đã nhận vé (${list.length} người)</p></div>`;
+                let rows = ''; let totalQty = 0;
+                list.forEach((item, idx) => { totalQty += parseInt(item.qty); rows += `<tr class="border-b"><td class="p-2 text-center text-xs">${idx + 1}</td><td class="p-2 font-medium">${item.name}</td><td class="p-2 text-center text-xs bg-gray-50">${item.type}</td><td class="p-2 text-sm">${item.unit}</td><td class="p-2 text-center font-bold">${item.qty}</td><td class="p-2 border-l w-24"></td></tr>`; });
+                rows += `<tr class="bg-gray-100 font-bold border-t-2 border-gray-300"><td colspan="4" class="p-2 text-right uppercase">Tổng cộng vé suất này:</td><td class="p-2 text-center text-lg text-blue-800">${totalQty}</td><td></td></tr>`;
+                const tableHtml = `<div class="p-0"><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-700 uppercase text-xs"><tr><th class="p-2 w-10 text-center">STT</th><th class="p-2">Họ và Tên</th><th class="p-2 w-20 text-center">Phân loại</th><th class="p-2">Đơn vị / Lớp</th><th class="p-2 w-16 text-center">SL Vé</th><th class="p-2 w-24 border-l text-center">Soát vé</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                const footerHtml = `<div class="print-footer-grid p-8"><div class="print-footer-item"><p class="font-bold">Người lập biểu</p><p class="italic mt-16">(Ký tên)</p></div><div class="print-footer-item"><p class="font-bold">Bộ phận Soát vé</p><p class="italic mt-16">(Ký nhận)</p></div></div>`;
+                wrapper.innerHTML = printHeader + tableHtml + footerHtml; container.appendChild(wrapper);
+            });
+            setTimeout(() => window.print(), 500);
         }
 
-        function toTitle(s) { 
-            return s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ""; 
+        function handlePrintHandover() {
+            const warningItems = giftData.filter(item => item.quota > 0 && (item.quota > (item.deliveredQty || 0)));
+            if (warningItems.length === 0) { alert("Tuyệt vời! Không có vé tặng nào cần bàn giao thêm."); return; }
+            const grouped = {}; warningItems.forEach(item => { const unit = item.department || "Khác"; if (!grouped[unit]) grouped[unit] = []; grouped[unit].push(item); });
+            const container = document.getElementById('tablesContainer'); container.innerHTML = ''; 
+            Object.keys(grouped).sort((a,b) => a.localeCompare(b, 'vi')).forEach(unitName => {
+                const list = grouped[unitName];
+                const wrapper = document.createElement('div'); wrapper.className = "unit-wrapper mb-12 bg-white rounded-xl shadow-sm border border-orange-200 overflow-hidden";
+                let rows = '';
+                list.forEach((item, idx) => {
+                    const remaining = Math.max(0, item.quota - (item.deliveredQty || 0));
+                    rows += `<tr class="border-b"><td class="p-3 text-center">${idx + 1}</td><td class="p-3 font-semibold">${item.name} <br/><span class="text-xs text-gray-500">${item.title}</span></td><td class="p-3 text-center">${item.quota}</td><td class="p-3 text-center">${item.deliveredQty || 0}</td><td class="p-3 text-center text-red-600 font-bold">${remaining}</td><td class="p-3 border-l bg-gray-50 w-48"></td></tr>`;
+                });
+                wrapper.innerHTML = `<div class="unit-header-print p-4 border-b border-orange-100 bg-orange-50"><h1 class="text-xl text-orange-800">${unitName}</h1><p>PHIẾU BÀN GIAO VÉ TẶNG</p></div><div class="p-0"><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-700 uppercase text-xs"><tr><th class="p-3 w-10 text-center">STT</th><th class="p-3">Họ Tên / Chức Danh</th><th class="p-3 w-20 text-center">Tiêu Chuẩn</th><th class="p-3 w-20 text-center">Đã Nhận</th><th class="p-3 w-20 text-center">Cần Giao</th><th class="p-3 border-l w-48 text-center">Ký Nhận</th></tr></thead><tbody>${rows}</tbody></table></div><div class="print-footer-grid p-8"><div class="print-footer-item"><p class="font-bold">Người giao vé</p><p class="italic mt-16">(Ký tên)</p></div><div class="print-footer-item"><p class="font-bold">Đại diện Đơn vị nhận</p><p class="italic mt-16">(Ký tên)</p></div></div>`;
+                container.appendChild(wrapper);
+            });
+            setTimeout(() => window.print(), 500);
         }
 
-        function getGiftQuota(title) {
-            // Logic giả định quota dựa trên tên
-            // Bạn có thể tùy chỉnh logic này
-            return 1; 
+        function handlePrintSessionManifest() {
+            const allItems = [];
+            studentData.forEach(s => { 
+                if (s.qty > 0) {
+                    const delivered = (s.delivered && s.delivered.trim() !== "");
+                    allItems.push({ name: s.studentName, type: 'Học sinh', unit: s.class, qty: s.qty, session: (s.session || "Chưa xác định").trim(), delivered: delivered }); 
+                }
+            });
+            staffData.forEach(s => { 
+                if (s.qty > 0) {
+                    const delivered = (s.delivered && s.delivered.trim() !== "");
+                    allItems.push({ name: s.name, type: 'CBNV', unit: s.department, qty: s.qty, session: (s.session || "Chưa xác định").trim(), delivered: delivered }); 
+                }
+            });
+            giftData.forEach(s => { const quota = typeof s.quota !== 'undefined' ? s.quota : getGiftQuota(s.title); const deliveredQty = s.deliveredQty || 0; if (quota > 0) { const delivered = deliveredQty >= quota; allItems.push({ name: s.name, type: 'Vé Tặng', unit: s.department, qty: quota, session: (s.session || "Chưa xác định").trim(), delivered: delivered, received: deliveredQty }); } });
+            if (allItems.length === 0) { alert("Chưa có dữ liệu để in."); return; }
+            const grouped = {}; allItems.forEach(item => { if (!grouped[item.session]) grouped[item.session] = []; grouped[item.session].push(item); });
+            const container = document.getElementById('tablesContainer'); container.innerHTML = '';
+            Object.keys(grouped).sort().forEach(sessionName => {
+                const list = grouped[sessionName]; list.sort((a,b) => a.name.localeCompare(b.name, 'vi'));
+                const wrapper = document.createElement('div'); wrapper.className = "unit-wrapper session-print-group mb-12 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                const totalTickets = list.reduce((sum, i) => sum + parseInt(i.qty), 0);
+                const deliveredTickets = list.filter(i => i.delivered).reduce((sum, i) => sum + parseInt(i.qty), 0);
+                const printHeader = `<div class="unit-header-print p-4 border-b border-gray-200 bg-blue-50"><h1 class="text-xl text-blue-900 uppercase">DANH SÁCH TỔNG HỢP - SUẤT: ${sessionName}</h1><p>Tổng vé: <b>${totalTickets}</b> | Đã nhận: <b>${deliveredTickets}</b></p></div>`;
+                let rows = ''; 
+                list.forEach((item, idx) => { 
+                    const statusClass = item.delivered ? "text-green-600 font-bold" : "text-orange-600 font-bold";
+                    const statusText = item.delivered ? "Đã nhận" : "Chưa nhận";
+                    rows += `<tr class="border-b"><td class="p-2 text-center text-xs">${idx + 1}</td><td class="p-2 font-medium">${item.name}</td><td class="p-2 text-center text-xs bg-gray-50">${item.type}</td><td class="p-2 text-sm">${item.unit}</td><td class="p-2 text-center font-bold">${item.qty}</td><td class="p-2 text-center text-xs ${statusClass}">${statusText}</td><td class="p-2 border-l w-24"></td></tr>`; 
+                });
+                const tableHtml = `<div class="p-0"><table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-700 uppercase text-xs"><tr><th class="p-2 w-10 text-center">STT</th><th class="p-2">Họ và Tên</th><th class="p-2 w-20 text-center">Phân loại</th><th class="p-2">Đơn vị / Lớp</th><th class="p-2 w-16 text-center">SL Vé</th><th class="p-2 w-20 text-center">Trạng Thái</th><th class="p-2 w-24 border-l text-center">Ghi chú</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                const footerHtml = `<div class="print-footer-grid p-8"><div class="print-footer-item"><p class="font-bold">Người lập biểu</p><p class="italic mt-16">(Ký tên)</p></div><div class="print-footer-item"><p class="font-bold">Bộ phận Soát vé</p><p class="italic mt-16">(Ký nhận)</p></div></div>`;
+                wrapper.innerHTML = printHeader + tableHtml + footerHtml; container.appendChild(wrapper);
+            });
+            setTimeout(() => window.print(), 500);
         }
 
+        // --- CORE UTILS ---
+        function getGiftQuota(t) { if(!t) return 0; t=t.toLowerCase(); if(["phó hiệu trưởng","hiệu phó","trưởng phòng","kế toán trưởng","phó phòng","chủ nhiệm","gvcn"].some(k=>t.includes(k))) return 1; if(["giám đốc","chủ tịch","hiệu trưởng"].some(k=>t.includes(k))) return 2; return 0; }
+        function calculateWarningCount() { let count = 0; giftData.forEach(item => { const remaining = item.quota - item.deliveredQty; if (item.quota === 0 || remaining > 0) count++; }); const badge = document.getElementById('warningBadge'); if (count > 0) { badge.innerText = count > 9 ? "9+" : count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } }
         function calculateGlobalStats() {
-            if(giftData.length === 0) return;
-            
-            const totalTickets = giftData.reduce((acc, item) => acc + item.quota, 0);
-            const totalDelivered = giftData.reduce((acc, item) => acc + item.deliveredQty, 0);
-            const remaining = totalTickets - totalDelivered;
-            const rate = totalTickets > 0 ? Math.round((totalDelivered / totalTickets) * 100) : 0;
-
-            document.getElementById('total-tickets').innerText = totalTickets;
-            document.getElementById('total-delivered').innerText = totalDelivered;
-            document.getElementById('total-remaining').innerText = remaining;
-            document.getElementById('completion-rate').innerText = `${rate}%`;
+            giftData.forEach(item => { if (typeof item.quota === 'undefined') item.quota = getGiftQuota(item.title); });
+            const groups = [ { id: 'student', name: 'Học Sinh', data: studentData, isGift: false }, { id: 'staff', name: 'CBNV', data: staffData, isGift: false }, { id: 'gift', name: 'Tặng Vé', data: giftData, isGift: true } ];
+            let globalReg = 0, globalDelivered = 0, globalUnpaid = 0;
+            let rowsHtml = '';
+            const sStats = {};
+            groups.forEach(grp => {
+                let lr=0, ld=0, lu=0;
+                grp.data.forEach(i => {
+                    let q=0, d=0, u=0; const ses=(i.session||"Chưa xác định").trim();
+                    if(!sStats[ses]) sStats[ses]={booked:0,delivered:0,undelivered:0};
+                    if(grp.isGift){ q=i.quota; d=i.deliveredQty||0; u=Math.max(0,q-d); lu+=u; sStats[ses].booked+=q; sStats[ses].delivered+=d; sStats[ses].undelivered+=u; } 
+                    else { q=parseInt(i.qty)||0; if(i.delivered) d=q; if(!i.paidDate) u=q; lu+=u; sStats[ses].booked+=q; if(d>0) sStats[ses].delivered+=q; else sStats[ses].undelivered+=q; }
+                    lr+=q; ld+=d;
+                });
+                globalReg+=lr; globalDelivered+=ld; globalUnpaid+=lu;
+                const p = lr>0?Math.round(ld/lr*100):0;
+                rowsHtml+=`<tr class="border-b"><td class="px-6 py-4">${grp.name}</td><td class="px-6 text-center font-bold">${lr}</td><td class="px-6 text-center text-emerald-600 font-bold">${ld}</td><td class="px-6 text-center text-red-600 font-bold">${lu}</td><td class="px-6 text-right">${p}%</td></tr>`;
+            });
+            document.getElementById('dashTotalReg').innerText = globalReg.toLocaleString(); document.getElementById('dashTotalDelivered').innerText = globalDelivered.toLocaleString(); document.getElementById('dashTotalUnpaid').innerText = globalUnpaid.toLocaleString(); document.getElementById('summaryTableBody').innerHTML = rowsHtml;
+            let sRows = ""; Object.keys(sStats).sort().forEach(s => { const stat = sStats[s]; const p = stat.booked > 0 ? Math.round((stat.delivered / stat.booked) * 100) : 0; sRows += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4 font-medium text-gray-900">${s}</td><td class="px-6 py-4 text-center font-bold text-gray-700">${stat.booked}</td><td class="px-6 py-4 text-center font-bold text-emerald-600">${stat.delivered}</td><td class="px-6 py-4 text-center font-bold text-orange-600">${stat.undelivered}</td><td class="px-6 py-4 text-right"><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-indigo-600 h-2.5 rounded-full" style="width: ${p}%"></div></div><span class="text-xs text-gray-500 mt-1 inline-block">${p}%</span></td></tr>`; }); document.getElementById('sessionStatsBody').innerHTML = sRows;
+            calculateWarningCount();
         }
 
-        function renderGiftList() {
-            const container = document.getElementById('gift-list');
-            container.innerHTML = '';
-
-            if(giftData.length === 0) {
-                 container.innerHTML = `
-                    <div class="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-                        <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-gray-400 mb-3"></i>
-                        <p class="font-medium">Chưa có dữ liệu</p>
-                    </div>`;
-                 lucide.createIcons();
-                 return;
+        // --- NAVIGATION & RENDER ---
+        function switchMainTab(t){ currentMainTab=t; if(t==='gift') currentSubTab='deliver'; updateUI(); if(t!=='dashboard') render(); }
+        function switchSubTab(t){ currentSubTab=t; updateUI(); render(); }
+        function updateUI() {
+            ['dashboard','student','staff','gift'].forEach(k => document.getElementById('nav'+k.charAt(0).toUpperCase()+k.slice(1)).className = k===currentMainTab ? 'nav-tab-active py-4 px-1 border-b-2 font-medium text-sm flex gap-2 relative' : 'nav-tab-inactive py-4 px-1 border-b-2 font-medium text-sm flex gap-2 relative');
+            const isD = currentMainTab==='dashboard';
+            document.getElementById('dashboardContent').classList.toggle('hidden', !isD);
+            document.getElementById('listControls').classList.toggle('hidden', isD);
+            document.getElementById('tablesContainer').classList.toggle('hidden', isD);
+            document.getElementById('btnPrintHandover').classList.toggle('hidden', currentMainTab!=='gift');
+            if(!isD) {
+                document.getElementById('btnUnpaid').style.display = currentMainTab==='gift'?'none':'flex';
+                document.querySelectorAll('.upload-area').forEach(e=>e.classList.add('hidden'));
+                if(currentMainTab==='student') document.getElementById('uploadAreaStudent').classList.remove('hidden');
+                else if(currentMainTab==='staff') document.getElementById('uploadAreaStaff').classList.remove('hidden');
+                else document.getElementById('uploadAreaGift').classList.remove('hidden');
             }
-
-            // Group data by Department or render flat list based on requirement
-            // Ở đây render dạng danh sách đơn giản cho print
-            
-            giftData.forEach((item, index) => {
-                const isComplete = item.deliveredQty >= item.quota;
-                const div = document.createElement('div');
-                div.className = 'unit-wrapper bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-3 break-inside-avoid';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-gray-900 text-lg">${index + 1}. ${item.name}</h4>
-                            <div class="flex flex-wrap gap-2 mt-1 text-sm text-gray-600">
-                                <span class="bg-gray-100 px-2 py-0.5 rounded">${item.department}</span>
-                                <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${item.title}</span>
-                                ${item.phone ? `<span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3"></i> ${item.phone}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="text-right pl-4">
-                            <div class="text-2xl font-bold ${isComplete ? 'text-green-600' : 'text-orange-600'}">
-                                ${item.deliveredQty}/${item.quota}
-                            </div>
-                            <div class="text-xs text-gray-500">Đã nhận</div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
+        }
+        function render(){
+            const c=document.getElementById('tablesContainer'); c.innerHTML='';
+            let data = currentMainTab==='student'?studentData : (currentMainTab==='staff'?staffData:giftData);
+            let filtered = data;
+            if(currentMainTab!=='gift') {
+                if(currentSubTab==='deliver') filtered = data.filter(i=>(i.paidDate&&i.paidDate.trim()) && (!i.delivered||!i.delivered.trim()));
+                else filtered = data.filter(i=>!i.paidDate||!i.paidDate.trim());
+            }
+            if(filtered.length===0){ c.innerHTML='<div class="p-12 text-center text-gray-500 bg-white">Trống</div>'; return;}
+            const grouped={}; filtered.forEach(i=>{ const u = currentMainTab==='student'?i.school:i.department||"Khác"; if(!grouped[u]) grouped[u]=[]; grouped[u].push(i); });
+            Object.keys(grouped).sort().forEach(u=>{
+                const items=grouped[u];
+                const wrap=document.createElement('div'); wrap.className="unit-wrapper mb-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
+                wrap.innerHTML=`<div class="px-6 py-4 bg-gray-50 border-b font-bold text-gray-900">${u} <span class="text-sm font-normal text-gray-500 ml-2">(${items.length})</span></div>`;
+                const content=document.createElement('div'); content.className="p-4";
+                if(currentMainTab==='student') { renderStudentGroups(content, items); } 
+                else { renderSimpleTable(content, items); }
+                wrap.appendChild(content); c.appendChild(wrap);
             });
             lucide.createIcons();
         }
 
-        function renderStatsTable() {
-            const tbody = document.getElementById('stats-table-body');
-            tbody.innerHTML = '';
-            
-            // Group by Title
-            const stats = {};
-            giftData.forEach(item => {
-                if(!stats[item.title]) stats[item.title] = { count: 0, delivered: 0, total: 0 };
-                stats[item.title].count++;
-                stats[item.title].delivered += item.deliveredQty;
-                stats[item.title].total += item.quota;
+        // Simplified renderers
+        function renderStudentGroups(container, items) { const byLvl={}; items.forEach(i=>{ const l=determineLevel(i.class); if(!byLvl[l]) byLvl[l]=[]; byLvl[l].push(i); }); Object.keys(byLvl).forEach(l=>{ container.innerHTML+=`<div class="mt-4 mb-2 font-bold text-blue-800 border-b border-blue-100">${l}</div>`; renderSimpleTable(container, byLvl[l]); }); }
+        function renderSimpleTable(container, items) {
+            let rows = '';
+            items.forEach((i,idx) => {
+                let name = i.name || i.studentName; let sub = i.title || i.parentName || i.email; let mid = '';
+                if(currentMainTab==='gift') { const rem = Math.max(0, i.quota-(i.deliveredQty||0)); mid = `<td class="text-center font-bold text-blue-600">${i.quota}</td><td class="text-center font-bold">${i.deliveredQty||0}</td><td class="text-center font-bold text-red-500">${rem}</td>`; } 
+                else { mid = `<td class="text-center font-bold">${i.qty}</td><td class="text-xs">${i.paidDate||'-'}</td>`; }
+                rows += `<tr class="border-b hover:bg-gray-50"><td class="p-2 text-center text-xs">${idx+1}</td><td class="p-2 font-medium">${name}<div class="text-xs text-gray-500">${sub}</div></td><td class="p-2 text-center">${i.class||i.department}</td>${mid}<td class="p-2"></td></tr>`;
             });
-
-            Object.keys(stats).forEach(key => {
-                const s = stats[key];
-                const rate = s.total > 0 ? Math.round((s.delivered / s.total) * 100) : 0;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${key || 'Khác'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${s.total}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${s.delivered}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex items-center">
-                            <span class="mr-2">${rate}%</span>
-                            <div class="w-16 bg-gray-200 rounded-full h-1.5">
-                                <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${rate}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            container.innerHTML += `<table class="w-full text-sm text-left"><thead><tr><th class="p-2 w-10">STT</th><th class="p-2">Họ Tên</th><th class="p-2 text-center">Đơn vị</th>${currentMainTab==='gift'?'<th class="p-2 text-center">Suất</th><th class="p-2 text-center">Nhận</th><th class="p-2 text-center">Thiếu</th>':'<th class="p-2 text-center">SL</th><th class="p-2">TT</th>'}<th class="p-2"></th></tr></thead><tbody>${rows}</tbody></table>`;
         }
+
+        // CSV Parsers & Utils
+        function handleStudentUpload(e) { 
+            const f=e.target.files[0]; 
+            if(f) { 
+                const r=new FileReader(); 
+                r.onload=x=>{ 
+                    const rows=x.target.result.split(/\r\n|\n/).filter(l=>l.trim()); 
+                    const d=[]; 
+                    let valid=0, skipped=0; 
+                    for(let i=1;i<rows.length;i++){ 
+                        const c=parseCSV(rows[i]); 
+                        // FIX: Check column H (index 7 - Student Name) OR column B (index 1 - Parent Name)
+                        // User request: Prioritize checking Student Name (H)
+                        const sName = (c[7] || "").trim();
+                        const pName = (c[1] || "").trim();
+                        
+                        if(sName || pName) { 
+                            valid++; 
+                            d.push({
+                                parentName: pName || "---", 
+                                phone: c[2], 
+                                school: c[3], 
+                                qty: parseInt((c[4]||"0").match(/\d+/)?.[0]||0), 
+                                session: c[5], 
+                                studentName: sName ? toTitle(sName) : "Chưa cập nhật", 
+                                class: c[8], 
+                                paidDate: c[10], 
+                                delivered: c[11]
+                            }); 
+                        } else { 
+                            skipped++; 
+                        } 
+                    } 
+                    studentData=d; 
+                    calculateGlobalStats(); 
+                    switchMainTab('student'); 
+                    if(event.isTrusted !== false) alert(`Tìm thấy ${rows.length-1} dòng. Đã nhập ${valid} dòng. Bỏ qua ${skipped} dòng.`); 
+                }; 
+                r.readAsText(f, getEncoding()); 
+            } 
+        }
+        function handleStaffUpload(e) { const f=e.target.files[0]; if(f) { const r=new FileReader(); r.onload=x=>{ const rows=x.target.result.split(/\r\n|\n/).filter(l=>l.trim()); const d=[]; let valid=0, skipped=0; for(let i=1;i<rows.length;i++){ const c=parseCSV(rows[i]); if(c[1]&&c[1].trim()) { valid++; d.push({name:toTitle(c[1]), phone:c[2], email:c[3], qty:parseInt((c[4]||"0").match(/\d+/)?.[0]||0), session:c[5], department:c[6], paidDate:c[8], delivered:c[9]}); } else { skipped++; } } staffData=d; calculateGlobalStats(); switchMainTab('staff'); if(event.isTrusted !== false) alert(`Tìm thấy ${rows.length-1} dòng. Đã nhập ${valid} dòng. Bỏ qua ${skipped} dòng.`); }; r.readAsText(f, getEncoding()); } }
+        function handleGiftUpload(e) { const f=e.target.files[0]; if(f) { const r=new FileReader(); r.onload=x=>{ const rows=x.target.result.split(/\r\n|\n/).filter(l=>l.trim()); const d=[]; let valid=0, skipped=0; for(let i=1;i<rows.length;i++){ const c=parseCSV(rows[i]); if(c[1]&&c[1].trim()) { valid++; const t=c[2]||""; const q=getGiftQuota(t); let dq=0; if(c[7] && c[7].match(/\d+/)) dq=parseInt(c[7].match(/\d+/)[0]); else if(c[7] && c[7].toLowerCase()==='x') dq=q; d.push({name:toTitle(c[1]), title:t, department:c[3], phone:c[4], email:c[5], session:c[6], deliveredQty:dq, quota:q}); } else { skipped++; } } giftData=d; calculateGlobalStats(); switchMainTab('gift'); if(event.isTrusted !== false) alert(`Tìm thấy ${rows.length-1} dòng. Đã nhập ${valid} dòng. Bỏ qua ${skipped} dòng.`); }; r.readAsText(f, getEncoding()); } }
+        
+        function parseCSV(text) { const re = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; return text.split(re).map(v => v.replace(/^"|"$/g, '').trim()); }
+        function toTitle(s) { return s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ""; }
+        function determineLevel(c) { if(!c) return "Mầm non"; c=c.toLowerCase(); if(c.includes('lá')||c.includes('chồi')||c.includes('mầm')) return "Mầm non"; const m=c.match(/\d+/); if(m) { const g=parseInt(m[0]); return g<=5?"Tiểu học":g<=9?"THCS":g<=12?"THPT":"Đại học"; } return "Mầm non"; }
+        function getLevelOrder(l) { return l==="Mầm non"?1:l==="Tiểu học"?2:l==="THCS"?3:l==="THPT"?4:5; }
+        function getEncoding() { return document.getElementById('encodingSelect').value; }
+        
+        init();
     </script>
 </body>
 </html>
