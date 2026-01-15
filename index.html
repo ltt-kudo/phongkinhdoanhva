@@ -642,8 +642,121 @@
         renderApps(apps);
         // initWheel(); // Sẽ init khi bấm vào tab
     </script>
+<!-- ========================================== -->
+<!-- BẮT ĐẦU ĐOẠN MÃ WIDGET ZALO -->
+<!-- Hãy dán đoạn này vào trước thẻ đóng </body> trong file index.html của bạn -->
+<!-- ========================================== -->
+
+<style>
+    /* CSS cho nút Zalo nổi */
+    .zalo-chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999; /* Đảm bảo luôn nổi trên cùng */
+        display: flex;
+        flex-direction: column;
+        align-items: end;
+        gap: 10px;
+        font-family: Arial, sans-serif;
+    }
+
+    /* Nút tròn icon Zalo */
+    .zalo-btn {
+        width: 60px;
+        height: 60px;
+        background-color: #0068ff; /* Màu xanh chuẩn Zalo */
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0, 104, 255, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        animation: pulse 2s infinite;
+    }
+
+    .zalo-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 104, 255, 0.5);
+    }
+
+    /* Icon Zalo (dùng SVG nội tuyến để không bị lỗi ảnh) */
+    .zalo-icon {
+        width: 35px;
+        height: 35px;
+        fill: white;
+    }
+
+    /* Bong bóng chat hướng dẫn (Tooltip) */
+    .zalo-tooltip {
+        background-color: white;
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+        position: absolute;
+        right: 70px; /* Cách nút tròn một chút */
+        top: 12px;
+    }
+    
+    /* Mũi tên nhỏ của tooltip */
+    .zalo-tooltip::after {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-width: 6px 0 6px 6px;
+        border-style: solid;
+        border-color: transparent transparent transparent white;
+    }
+
+    /* Hiển thị tooltip khi hover */
+    .zalo-chat-widget:hover .zalo-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+    }
+
+    /* Hiệu ứng rung nhẹ thu hút sự chú ý */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(0, 104, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); }
+    }
+</style>
+
+<div class="zalo-chat-widget">
+    <!-- Dòng chữ nhắc nhở (Tooltip) -->
+    <div class="zalo-tooltip">Cần hỗ trợ? Chat ngay!</div>
+
+    <!-- Nút bấm chính -->
+    <!-- THAY ĐỔI SỐ ĐIỆN THOẠI CỦA BẠN Ở ĐÂY (bỏ số 0 đầu) -->
+    <!-- Ví dụ: https://zalo.me/84901234567 -->
+    <a href="https://zalo.me/84938715763" target="_blank" class="zalo-btn" title="Chat qua Zalo">
+        <!-- Logo Zalo SVG -->
+        <svg class="zalo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 4C14.0589 4 6 11.1634 6 20C6 24.9655 8.35821 29.3585 12.0728 32.2275C12.3364 32.4334 12.4828 32.7571 12.4435 33.0886L12.0232 36.7212C11.9161 37.6433 12.8711 38.2736 13.6816 37.8202L18.6756 35.0253C18.9669 34.8623 19.3094 34.8222 19.6302 34.908C21.0427 35.2863 22.5029 35.4851 24 35.4851C33.9411 35.4851 42 28.8366 42 20C42 11.1634 33.9411 4 24 4ZM28.536 26.6857H19.7909C18.9912 26.6857 18.5709 25.7481 19.1068 25.1557L21.7251 22.1829H19.7909C19.2386 22.1829 18.7909 21.7351 18.7909 21.1829V18.1829C18.7909 17.6306 19.2386 17.1829 19.7909 17.1829H28.536C29.3357 17.1829 29.756 18.1205 29.2201 18.7129L26.6018 21.6857H28.536C29.0883 21.6857 29.536 22.1335 29.536 22.6857V25.6857C29.536 26.238 29.0883 26.6857 28.536 26.6857Z"/>
+        </svg>
+    </a>
+</div>
+
+<!-- ========================================== -->
+<!-- KẾT THÚC ĐOẠN MÃ WIDGET ZALO -->
+<!-- ========================================== --> 
 </body>
 </html>
+
 
 
 
