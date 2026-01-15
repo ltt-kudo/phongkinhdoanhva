@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay May Mắn Pro</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #2c3e50;
+            --accent-color: #f1c40f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Nút cài đặt ẩn */
+        #settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #ccc;
+            z-index: 1000;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+        #settings-toggle:hover { color: var(--secondary-color); }
+
+        h1 { 
+            color: var(--primary-color); 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        /* Khu vực Vòng quay */
+        .wheel-wrapper {
+            position: relative;
+            padding: 20px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 10px solid var(--secondary-color);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        #pointer {
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background-color: var(--primary-color);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 10;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        }
+
+        #center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--secondary-color);
+            border: 4px solid var(--secondary-color);
+        }
+
+        #spinBtn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 22px;
+            font-weight: bold;
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #1e8449, 0 15px 20px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #spinBtn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #1e8449, inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #spinBtn:disabled {
+            background: #bdc3c7;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: translateY(6px);
+        }
+
+        /* Khu vực Cài đặt (Ẩn mặc định) */
+        .settings-panel {
+            display: none; /* Ẩn */
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            z-index: 999;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .settings-panel h3 { margin-top: 0; color: var(--secondary-color); border-bottom: 2px solid #eee; padding-bottom: 10px;}
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 5px; text-align: center; border-bottom: 1px solid #eee; }
+        input { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        
+        .btn-small { padding: 5px 10px; border: none; border-radius: 4px; color: white; cursor: pointer; }
+        .btn-add { background: #3498db; width: 100%; margin-top: 10px; padding: 8px;}
+        .btn-del { background: #e74c3c; }
+        .btn-update { background: #f39c12; width: 100%; margin-top: 10px; padding: 10px; font-weight: bold; }
+
+        /* POPUP KẾT QUẢ ĐẸP */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 5px solid var(--accent-color);
+        }
+
+        .modal-icon { font-size: 60px; margin-bottom: 10px; display: block; }
+        .modal-title { font-size: 24px; color: var(--secondary-color); margin: 10px 0; font-weight: bold; }
+        .modal-prize { font-size: 32px; color: var(--primary-color); font-weight: bold; margin: 15px 0; text-transform: uppercase;}
+        
+        .close-popup-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .close-popup-btn:hover { background: #c0392b; }
+
+        /* Animation Keyframes */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 
+            0% { transform: scale(0.5); opacity: 0; } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+
+        /* Pháo giấy CSS đơn giản */
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background-color: #f00;
+            animation: confetti-fall 3s linear infinite;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1;}
+            100% { transform: translateY(600px) rotate(720deg); opacity: 0;}
+        }
+
+    </style>
+</head>
+<body>
+
+    <button id="settings-toggle" onclick="toggleSettings()" title="Cài đặt">⚙️</button>
+
+    <h1>🎡 VÒNG QUAY MAY MẮN</h1>
+
+    <div class="wheel-wrapper">
+        <div id="pointer"></div>
+        <div class="wheel-container">
+            <canvas id="canvas" width="500" height="500"></canvas>
+        </div>
+        <div id="center-circle">GO</div>
+    </div>
+
+    <button id="spinBtn" onclick="spin()">QUAY NGAY</button>
+
+    <div id="settingsPanel" class="settings-panel">
+        <h3>⚙️ Thiết lập kho quà</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Quà</th>
+                    <th>Tỷ lệ</th>
+                    <th>Kho</th>
+                    <th>Màu</th>
+                    <th>Xóa</th>
+                </tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+        </table>
+        <button class="btn-small btn-add" onclick="addItem()">+ Thêm Ô</button>
+        <button class="btn-small btn-update" onclick="redrawWheel()">Cập Nhật & Đóng</button>
+        <p style="font-size: 12px; color: #666; margin-top: 10px;">
+            * Tỷ lệ: Trọng số càng cao càng dễ trúng.<br>
+            * Kho: Nếu = 0 sẽ tự động bỏ qua khi quay.
+        </p>
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-icon">🎉</span>
+            <div class="modal-title">CHÚC MỪNG BẠN!</div>
+            <div style="color: #666;">Bạn đã nhận được phần quà:</div>
+            <div id="modalPrizeName" class="modal-prize">IPHONE 15</div>
+            <button class="close-popup-btn" onclick="closeModal()">NHẬN QUÀ</button>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu mẫu ban đầu
+        let items = [
+            { label: "100K Tiền mặt", probability: 5, stock: 2, color: "#FF5733" },
+            { label: "Chúc may mắn", probability: 50, stock: 999, color: "#3498DB" },
+            { label: "Voucher 20%", probability: 20, stock: 10, color: "#9B59B6" },
+            { label: "Tai nghe", probability: 10, stock: 5, color: "#F1C40F" },
+            { label: "Thêm lượt", probability: 15, stock: 20, color: "#2ECC71" },
+            { label: "Móc khóa", probability: 15, stock: 50, color: "#E67E22" }
+        ];
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const modal = document.getElementById('resultModal');
+        const modalPrizeName = document.getElementById('modalPrizeName');
+        
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        // --- CÁC HÀM CÀI ĐẶT ---
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            if (panel.style.display === 'block') renderSettingsTable();
+        }
+
+        function renderSettingsTable() {
+            const tbody = document.getElementById('itemsTableBody');
+            tbody.innerHTML = '';
+            items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${item.label}" onchange="updateItem(${index}, 'label', this.value)"></td>
+                    <td><input type="number" value="${item.probability}" onchange="updateItem(${index}, 'probability', this.value)" style="width: 40px;"></td>
+                    <td><input type="number" value="${item.stock}" onchange="updateItem(${index}, 'stock', this.value)" style="width: 40px;"></td>
+                    <td><input type="color" value="${item.color}" onchange="updateItem(${index}, 'color', this.value)" style="padding:0; height:30px;"></td>
+                    <td><button class="btn-small btn-del" onclick="deleteItem(${index})">X</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateItem(index, key, value) {
+            if (key === 'probability' || key === 'stock') {
+                items[index][key] = parseInt(value) || 0;
+            } else {
+                items[index][key] = value;
+            }
+        }
+
+        function addItem() {
+            items.push({ label: "Quà mới", probability: 10, stock: 10, color: getRandomColor() });
+            renderSettingsTable();
+        }
+
+        function deleteItem(index) {
+            if (items.length <= 2) return alert("Tối thiểu 2 ô!");
+            items.splice(index, 1);
+            renderSettingsTable();
+        }
+
+        function redrawWheel() {
+            toggleSettings(); // Đóng bảng
+            currentRotation = 0;
+            canvas.style.transform = `rotate(0deg)`;
+            drawWheel();
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // --- HÀM VẼ VÒNG QUAY ---
+        function drawWheel() {
+            const numSegments = items.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            items.forEach((item, index) => {
+                const angle = index * arcSize;
+                
+                // Vẽ miếng bánh
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+                ctx.fillStyle = item.color;
+                ctx.fill();
+                ctx.stroke();
+
+                // Vẽ chữ
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 18px Arial";
+                ctx.shadowColor="rgba(0,0,0,0.5)";
+                ctx.shadowBlur=4;
+                ctx.fillText(item.label, radius - 30, 6);
+                ctx.restore();
+            });
+        }
+
+        // --- LOGIC QUAY ---
+        function getWinnerIndex() {
+            const availableItems = items.map((item, index) => ({...item, originalIndex: index}))
+                                        .filter(item => item.stock > 0);
+
+            if (availableItems.length === 0) return -1;
+
+            let totalWeight = availableItems.reduce((sum, item) => sum + item.probability, 0);
+            let random = Math.random() * totalWeight;
+            let currentSum = 0;
+
+            for (let item of availableItems) {
+                currentSum += item.probability;
+                if (random <= currentSum) return item.originalIndex;
+            }
+            return availableItems[availableItems.length - 1].originalIndex;
+        }
+
+        function spin() {
+            if (isSpinning) return;
+
+            const winnerIndex = getWinnerIndex();
+            if (winnerIndex === -1) return alert("Hết quà rồi!");
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const numSegments = items.length;
+            const arcSize = 360 / numSegments;
+            const winnerAngle = winnerIndex * arcSize; 
+            
+            // Tính toán góc quay để kim (đang ở vị trí 270 độ / 12h) chỉ vào giữa ô trúng
+            // Canvas vẽ từ 0 độ (hướng 3h). Cần xoay sao cho ô trúng đi đến vị trí 270.
+            const segmentCenterOffset = arcSize / 2;
+            let targetRotation = 270 - (winnerAngle + segmentCenterOffset);
+            
+            while (targetRotation < 0) targetRotation += 360;
+            const totalRotation = currentRotation + (360 * 5) + (targetRotation - (currentRotation % 360));
+
+            canvas.style.transform = `rotate(${totalRotation}deg)`;
+            currentRotation = totalRotation;
+
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                
+                // Trừ kho
+                items[winnerIndex].stock--;
+                
+                // Hiện Popup
+                showModal(items[winnerIndex].label, items[winnerIndex].stock === 0);
+                
+            }, 5000);
+        }
+
+        // --- MODAL & EFFECT ---
+        function showModal(prizeName, isOutOfStock) {
+            modalPrizeName.innerText = prizeName;
+            modal.style.display = 'flex';
+            
+            // Hiệu ứng pháo giấy (tạo thẻ div tạm thời)
+            for(let i=0; i<30; i++) {
+                createConfetti();
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            // Xóa pháo giấy cũ
+            document.querySelectorAll('.confetti').forEach(e => e.remove());
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.backgroundColor = getRandomColor();
+            document.body.appendChild(confetti);
+            
+            // Tự xóa sau khi rơi xong
+            setTimeout(() => confetti.remove(), 4000);
+        }
+
+        // Init
+        drawWheel();
+
+    </script>
+</body>
+</html>
