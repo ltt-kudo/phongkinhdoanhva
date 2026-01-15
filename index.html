@@ -3,48 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Hub - LONXONTEAM</title>
+    <title>AI Hub - Văn Phòng</title>
     <style>
-        /* --- GLOBAL STYLES --- */
         :root {
-            /* Theme Dashboard */
-            --bg-dash: #0f172a;
-            --card-dash: #1e293b;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
             --text-main: #f1f5f9;
             --text-sub: #94a3b8;
             --accent: #3b82f6;
-            
-            /* Theme Wheel */
-            --primary-wheel: #ec4899;
-            --bg-wheel: #1e1b4b;
-            --panel-wheel: #312e81;
+            --accent-hover: #2563eb;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dash);
+            background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
             padding: 0;
             line-height: 1.6;
-            min-height: 100vh;
         }
 
-        /* Ẩn hiện các view */
-        .view-section {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        .view-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* ================= DASHBOARD STYLES ================= */
+        /* Header */
         header {
             text-align: center;
             padding: 40px 20px;
@@ -52,9 +31,10 @@
             border-bottom: 1px solid #334155;
         }
 
-        h1.dash-title { margin: 0; font-size: 2.5rem; color: var(--accent); }
+        h1 { margin: 0; font-size: 2.5rem; color: var(--accent); }
         p.subtitle { color: var(--text-sub); margin-top: 10px; }
 
+        /* Search & Filter */
         .controls {
             max-width: 1200px;
             margin: 30px auto;
@@ -77,6 +57,7 @@
             outline: none;
             transition: 0.3s;
         }
+
         input#searchBar:focus { border-color: var(--accent); }
 
         .filters button {
@@ -89,12 +70,14 @@
             margin: 0 5px;
             transition: 0.3s;
         }
+
         .filters button:hover, .filters button.active {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
         }
 
+        /* App Grid */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -105,7 +88,7 @@
         }
 
         .card {
-            background-color: var(--card-dash);
+            background-color: var(--card-bg);
             border-radius: 12px;
             padding: 20px;
             border: 1px solid #334155;
@@ -114,7 +97,9 @@
             flex-direction: column;
             justify-content: space-between;
         }
+
         .card:hover { transform: translateY(-5px); border-color: var(--accent); }
+
         .card h3 { margin-top: 0; color: white; }
         .card .tag {
             display: inline-block;
@@ -125,6 +110,7 @@
             font-size: 0.8rem;
             margin-bottom: 10px;
         }
+
         .card p { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 20px; }
 
         .btn-visit {
@@ -137,10 +123,11 @@
             border-radius: 6px;
             font-weight: bold;
             transition: background 0.3s;
-            cursor: pointer;
         }
-        .btn-visit:hover { background: #2563eb; }
 
+        .btn-visit:hover { background: var(--accent-hover); }
+
+        /* Footer */
         footer {
             text-align: center;
             padding: 40px;
@@ -148,271 +135,78 @@
             border-top: 1px solid #334155;
             margin-top: 40px;
         }
-        
-        /* ================= WHEEL STYLES ================= */
-        #wheel-view {
-            background-color: var(--bg-wheel);
-            min-height: 100vh;
-            display: none; /* Mặc định ẩn, được JS kích hoạt flex sau */
-            flex-direction: column;
-            align-items: center;
-            padding-bottom: 50px;
-        }
-        /* Override body style for wheel view specific context */
-        #wheel-view.active {
-            display: flex; 
-        }
-
-        .wheel-header { margin-top: 20px; text-shadow: 0 0 10px var(--primary-wheel); text-align: center; }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .back-btn:hover { background: rgba(255,255,255,0.1); }
-
-        .wheel-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 20px auto;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
-            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-
-        .pointer {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 40px solid #fbbf24;
-            z-index: 10;
-            filter: drop-shadow(0 4px 2px rgba(0,0,0,0.5));
-        }
-
-        .center-dot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .wheel-controls { margin: 20px; display: flex; gap: 10px; }
-        
-        .wheel-btn {
-            padding: 12px 24px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        #spinBtn { background: var(--primary-wheel); color: white; box-shadow: 0 4px 0 #be185d; }
-        #spinBtn:active { transform: translateY(4px); box-shadow: none; }
-        #spinBtn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
-
-        .btn-settings { background: #4f46e5; color: white; }
-        .btn-reset { background: #dc2626; color: white; }
-
-        /* Modal & Overlay */
-        #resultModal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            color: #333;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            z-index: 100;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            animation: popIn 0.3s ease;
-        }
-        #resultModal h2 { color: var(--primary-wheel); margin: 0 0 10px 0; }
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 99;
-        }
-
-        /* Settings Panel */
-        #settingsPanel {
-            display: none;
-            width: 90%;
-            max-width: 600px;
-            background: var(--panel-wheel);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 50px;
-            color: white;
-        }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #4338ca; padding: 8px; text-align: center; }
-        th { background: #3730a3; }
-        
-        .wheel-input { 
-            background: transparent; border: none; color: white; 
-            width: 100%; text-align: center; font-size: 1rem;
-        }
-        .wheel-input:focus { outline: 1px solid var(--primary-wheel); background: #1e1b4b; }
-
-        @keyframes popIn { from { transform: translate(-50%, -60%) scale(0.8); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; }}
-
-        @media (max-width: 500px) {
-            .wheel-container { width: 300px; height: 300px; }
-        }
     </style>
 </head>
 <body>
 
-    <!-- === PHẦN 1: TRANG CHỦ DASHBOARD === -->
-    <div id="dashboard-view" class="view-section active">
-        <header>
-            <h1 class="dash-title">AI TOOLKIT 🚀</h1>
-            <p class="subtitle">Kho công cụ AI được các ẩn danh phòng Kinh Doanh - VA Schools thực hiện</p>
-        </header>
-        <div class="container" id="appContainer">
-            <!-- Apps will be rendered here -->
-        </div>
+    <header>
+        <h1>AI TOOLKIT 🚀</h1>
+        <p class="subtitle">Kho công cụ AI miễn phí dành cho văn phòng chúng ta</p>
+    </header>
 
-        <footer>
-            <p>Phát triển nội bộ - Dành cho Team</p>
-        </footer>
-    </div>
-
-    <!-- === PHẦN 2: VÒNG QUAY MAY MẮN === -->
-    <div id="wheel-view" class="view-section">
-        <button class="back-btn" onclick="switchView('dashboard')">⬅ Quay lại</button>
-
-        <h1 class="wheel-header">VÒNG QUAY MAY MẮN 🎁</h1>
-
-        <div class="wheel-container">
-            <div class="pointer"></div>
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
-            <div class="center-dot"></div>
-        </div>
-
-        <div class="wheel-controls">
-            <button id="spinBtn" class="wheel-btn" onclick="spin()">QUAY NGAY</button>
-            <button class="wheel-btn btn-settings" onclick="toggleSettings()">⚙️ Cài đặt</button>
-        </div>
-
-        <div id="settingsPanel">
-            <h3>⚙️ Cấu hình quà tặng</h3>
-            <p style="font-size: 0.9rem; color: #aaa;">Lưu ý: Tổng tỷ lệ không nhất thiết phải là 100. Số lượng = 0 sẽ không quay ra.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tên quà</th>
-                        <th>Màu sắc</th>
-                        <th>Tỷ lệ</th>
-                        <th>SL</th>
-                        <th>Xóa</th>
-                    </tr>
-                </thead>
-                <tbody id="settingsBody"></tbody>
-            </table>
-            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
-                <button onclick="addRow()" style="background: #059669; color: white; border:none; padding:8px; border-radius:4px; cursor:pointer;">+ Thêm</button>
-                <button onclick="saveSettings()" style="background: var(--primary-wheel); color: white; border:none; padding:8px; border-radius:4px; cursor:pointer;">Lưu & Áp dụng</button>
-                <button class="btn-reset" onclick="resetData()" style="padding:8px; border-radius:4px; border:none; cursor:pointer;">Reset Gốc</button>
-            </div>
+    <div class="controls">
+        <input type="text" id="searchBar" placeholder="Tìm kiếm công cụ (ví dụ: ChatGPT, Excel...)" onkeyup="filterApps()">
+        <div class="filters" id="filterContainer">
+            <button class="active" onclick="filterCategory('all')">Tất cả</button>
+            <button onclick="filterCategory('Chat')">Chat/Trợ lý</button>
+            <button onclick="filterCategory('Design')">Hình ảnh</button>
+            <button onclick="filterCategory('Office')">Văn phòng</button>
         </div>
     </div>
 
-    <!-- MODAL CHUNG CHO VÒNG QUAY -->
-    <div class="overlay" id="overlay" onclick="closeModal()"></div>
-    <div id="resultModal">
-        <h2>CHÚC MỪNG!</h2>
-        <p id="winnerName" style="font-size: 1.5rem; font-weight: bold;"></p>
-        <button onclick="closeModal()" style="background: var(--primary-wheel); color: white; margin-top: 15px; padding: 10px 20px; border:none; border-radius:5px; cursor:pointer;">OK</button>
-    </div>
+    <div class="container" id="appContainer">
+        </div>
 
-    <!-- === JAVASCRIPT === -->
+    <footer>
+        <p>Phát triển nội bộ - Dành cho Team</p>
+    </footer>
 
-        // ================= LOGIC CHUNG & DASHBOARD =================
+    <script>
+        // DỮ LIỆU CÔNG CỤ (Bạn chỉnh sửa/thêm mới ở đây)
         const apps = [
             {
-                name: "Vòng Quay May Mắn",
-                category: "Office",
-                desc: "Mini game tặng quà nội bộ. Tự động loại bỏ quà đã trao.",
-                link: "vongquay.html", // Link nội bộ
+                name: "VONG QUAY MAY MẮN",
+                category: "Chat",
+                desc: "Trợ lý ảo mạnh mẽ nhất. Dùng để viết email, lên ý tưởng, tóm tắt văn bản.",
+                link: "vongquay.html"
             },
-              {
-                name: "QUẢN LÝ VÉ",
-                category: "Chat",
-                desc: "Xử xý công việc mua bán vé",
-                link: "quan-ly-ve.html"
-            },,
             {
-                name: "Auto Infographic Maker By Shinichi Kudo",
+                name: "Gemini (Google)",
                 category: "Chat",
-                desc: "AUTO REPORT",
-                link: "https://gemini.google.com/gem/1wLALVjb0v6axqi3ui_7K_LV7bUmpZ9uF?usp=sharing"
+                desc: "AI của Google. Rất giỏi tìm kiếm thông tin thời gian thực và xử lý tiếng Việt.",
+                link: "https://gemini.google.com"
             },
             {
                 name: "PDF TO IMAGE OFFLINE",
                 category: "Design",
-                desc: "Chuyển đổi file pdf thành hình ảnh tốc độ ánh sáng.",
-                link: "pdf-to-image.html"
+                desc: "Tạo hình ảnh minh họa, thiết kế poster miễn phí từ văn bản.",
+                link: "pdf-to-image-html"
             },
             {
-                name: "ChatPDF",
+                name: "QUẢN LÝVÉ",
                 category: "Office",
-                desc: "Tải file PDF lên và hỏi đáp nội dung. Tốt cho đọc hợp đồng.",
-                link: "https://www.chatpdf.com"
+                desc: "Tải file PDF lên và hỏi đáp nội dung trong đó. Cực tốt để đọc hợp đồng/tài liệu.",
+                link: "quan-ly-ve.html"
             },
             {
                 name: "DeepL Translate",
                 category: "Office",
-                desc: "Công cụ dịch thuật tự nhiên và chính xác hơn Google.",
+                desc: "Công cụ dịch thuật tự nhiên và chính xác hơn Google Translate.",
                 link: "https://www.deepl.com"
             },
             {
-                name: "Canva Magic",
+                name: "Canva Magic Studio",
                 category: "Design",
-                desc: "Bộ công cụ AI tích hợp trong Canva để xóa phông, tạo ảnh.",
+                desc: "Bộ công cụ AI tích hợp trong Canva để xóa phông, tạo ảnh, viết nội dung.",
                 link: "https://www.canva.com"
             }
         ];
 
+        // Hàm hiển thị App
         function renderApps(data) {
             const container = document.getElementById('appContainer');
             container.innerHTML = '';
             data.forEach(app => {
-                const targetAttr = app.internal ? '' : 'target="_blank"';
                 const card = `
                     <div class="card">
                         <div>
@@ -420,13 +214,17 @@
                             <h3>${app.name}</h3>
                             <p>${app.desc}</p>
                         </div>
-                        <a href="${app.link}" ${targetAttr} class="btn-visit">Truy cập ngay</a>
+                        <a href="${app.link}" target="_blank" class="btn-visit">Truy cập ngay</a>
                     </div>
                 `;
                 container.innerHTML += card;
             });
         }
 
+        // Khởi chạy lần đầu
+        renderApps(apps);
+
+        // Chức năng Tìm kiếm
         function filterApps() {
             const query = document.getElementById('searchBar').value.toLowerCase();
             const filtered = apps.filter(app => 
@@ -436,530 +234,21 @@
             renderApps(filtered);
         }
 
+        // Chức năng Lọc theo danh mục
         function filterCategory(cat) {
+            // Đổi màu nút
             const buttons = document.querySelectorAll('.filters button');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            if (cat === 'all') renderApps(apps);
-            else renderApps(apps.filter(app => app.category === cat));
-        }
-
-        function switchView(viewName) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            if (viewName === 'wheel') {
-                document.getElementById('wheel-view').classList.add('active');
-                initWheel(); // Khởi tạo lại vòng quay khi mở để đảm bảo vẽ đúng size
+            // Lọc dữ liệu
+            if (cat === 'all') {
+                renderApps(apps);
             } else {
-                document.getElementById('dashboard-view').classList.add('active');
+                const filtered = apps.filter(app => app.category === cat);
+                renderApps(filtered);
             }
         }
-
-        // ================= LOGIC VÒNG QUAY (Ported from vong-quay.html) =================
-        const defaultPrizes = [
-            { name: "100K Tiền mặt", color: "#ef4444", weight: 10, count: 2 },
-            { name: "Chuột không dây", color: "#f97316", weight: 20, count: 5 },
-            { name: "Tai nghe Bluetooth", color: "#eab308", weight: 5, count: 1 },
-            { name: "Voucher Coffee", color: "#22c55e", weight: 30, count: 10 },
-            { name: "Chúc may mắn lần sau", color: "#3b82f6", weight: 50, count: 999 },
-            { name: "Sổ tay", color: "#a855f7", weight: 25, count: 15 }
-        ];
-
-        let prizes = [];
-        let rotation = 0;
-        let isSpinning = false;
-        let wheelCanvas, ctx;
-
-        function initWheel() {
-            wheelCanvas = document.getElementById('wheelCanvas');
-            ctx = wheelCanvas.getContext('2d');
-            
-            const savedData = localStorage.getItem('luckyWheelData');
-            if (savedData) {
-                prizes = JSON.parse(savedData);
-            } else {
-                prizes = JSON.parse(JSON.stringify(defaultPrizes));
-            }
-            renderWheel();
-            renderSettings();
-        }
-
-        function renderWheel() {
-            if (!wheelCanvas) return;
-            const activePrizes = prizes.filter(p => p.count > 0);
-            
-            if (activePrizes.length === 0) {
-                // alert("Hết quà!"); 
-                // Không alert ở render để tránh spam khi load
-                return;
-            }
-
-            const totalWeight = activePrizes.reduce((sum, p) => sum + parseInt(p.weight), 0);
-            let startAngle = 0;
-            const arc = 2 * Math.PI;
-
-            ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
-
-            activePrizes.forEach((prize) => {
-                const sliceAngle = (prize.weight / totalWeight) * arc;
-
-                ctx.beginPath();
-                ctx.moveTo(250, 250);
-                ctx.arc(250, 250, 250, startAngle, startAngle + sliceAngle);
-                ctx.fillStyle = prize.color;
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(250, 250);
-                ctx.rotate(startAngle + sliceAngle / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "white";
-                ctx.font = "bold 20px Arial";
-                ctx.fillText(prize.name, 230, 10);
-                ctx.restore();
-
-                startAngle += sliceAngle;
-            });
-        }
-
-        function spin() {
-            if (isSpinning) return;
-            
-            const activePrizes = prizes.filter(p => p.count > 0);
-            if (activePrizes.length === 0) {
-                alert("Đã hết quà! Vui lòng vào Cài đặt thêm quà.");
-                return;
-            }
-
-            isSpinning = true;
-            document.getElementById('spinBtn').disabled = true;
-
-            const totalWeight = activePrizes.reduce((sum, p) => sum + parseInt(p.weight), 0);
-            let random = Math.random() * totalWeight;
-            let winnerIndex = 0;
-            
-            for (let i = 0; i < activePrizes.length; i++) {
-                if (random < activePrizes[i].weight) {
-                    winnerIndex = i;
-                    break;
-                }
-                random -= activePrizes[i].weight;
-            }
-
-            const winner = activePrizes[winnerIndex];
-
-            // Logic tính góc dừng
-            let currentAngle = 0;
-            for (let i = 0; i < winnerIndex; i++) {
-                currentAngle += (activePrizes[i].weight / totalWeight) * 360;
-            }
-            const sliceSize = (winner.weight / totalWeight) * 360;
-            const stopAngle = currentAngle + (sliceSize / 2); 
-            
-            // 3600 (10 vòng) + góc bù để kim (ở 12h tức -90deg) chỉ vào stopAngle
-            // Lưu ý: Canvas vẽ từ 3h (0deg). Kim ở 12h.
-            const targetRotation = 3600 + (360 - stopAngle) - 90;
-            const fuzzy = (Math.random() - 0.5) * (sliceSize * 0.8); 
-            
-            rotation += targetRotation + fuzzy; 
-            wheelCanvas.style.transform = `rotate(${rotation}deg)`;
-
-            setTimeout(() => {
-                isSpinning = false;
-                document.getElementById('spinBtn').disabled = false;
-                showResult(winner);
-                
-                const realIndex = prizes.findIndex(p => p.name === winner.name);
-                if (realIndex !== -1) {
-                    prizes[realIndex].count--;
-                    localStorage.setItem('luckyWheelData', JSON.stringify(prizes));
-                }
-            }, 4000);
-        }
-
-        function showResult(winner) {
-            document.getElementById('winnerName').innerText = winner.name;
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('resultModal').style.display = 'block';
-            renderSettings();
-        }
-
-        function closeModal() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('resultModal').style.display = 'none';
-            renderWheel();
-        }
-
-        function toggleSettings() {
-            const panel = document.getElementById('settingsPanel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-            renderSettings();
-        }
-
-        function renderSettings() {
-            const tbody = document.getElementById('settingsBody');
-            tbody.innerHTML = '';
-            prizes.forEach((p, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input class="wheel-input" type="text" value="${p.name}" onchange="updatePrize(${index}, 'name', this.value)"></td>
-                    <td><input class="wheel-input" type="color" value="${p.color}" onchange="updatePrize(${index}, 'color', this.value)"></td>
-                    <td><input class="wheel-input" type="number" value="${p.weight}" onchange="updatePrize(${index}, 'weight', this.value)"></td>
-                    <td><input class="wheel-input" type="number" value="${p.count}" onchange="updatePrize(${index}, 'count', this.value)"></td>
-                    <td><button onclick="removePrize(${index})" style="background:#ef4444; color:white; border:none; padding:5px 10px; cursor:pointer;">X</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function addRow() {
-            prizes.push({ name: "Quà mới", color: "#ffffff", weight: 10, count: 1 });
-            renderSettings();
-        }
-        function removePrize(index) {
-            prizes.splice(index, 1);
-            renderSettings();
-        }
-        function updatePrize(index, field, value) {
-            prizes[index][field] = value;
-        }
-        function saveSettings() {
-            localStorage.setItem('luckyWheelData', JSON.stringify(prizes));
-            renderWheel();
-            alert("Đã lưu cấu hình!");
-            toggleSettings();
-        }
-        function resetData() {
-            if(confirm("Bạn có chắc muốn reset về mặc định?")) {
-                localStorage.removeItem('luckyWheelData');
-                location.reload();
-            }
-        }
-
-        // Khởi động
-        renderApps(apps);
-        // initWheel(); // Sẽ init khi bấm vào tab
     </script>
-<!-- ========================================== -->
-<!-- BẮT ĐẦU ĐOẠN MÃ WIDGET ZALO -->
-<!-- Hãy dán đoạn này vào trước thẻ đóng </body> trong file index.html của bạn -->
-<!-- ========================================== -->
-
-<style>
-    /* CSS cho nút Zalo nổi */
-    .zalo-chat-widget {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999; /* Đảm bảo luôn nổi trên cùng */
-        display: flex;
-        flex-direction: column;
-        align-items: end;
-        gap: 10px;
-        font-family: Arial, sans-serif;
-    }
-
-    /* Nút tròn icon Zalo */
-    .zalo-btn {
-        width: 60px;
-        height: 60px;
-        background-color: #0068ff; /* Màu xanh chuẩn Zalo */
-        border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 104, 255, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        text-decoration: none;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        animation: pulse 2s infinite;
-    }
-
-    .zalo-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(0, 104, 255, 0.5);
-    }
-
-    /* Icon Zalo (dùng SVG nội tuyến để không bị lỗi ảnh) */
-    .zalo-icon {
-        width: 35px;
-        height: 35px;
-        fill: white;
-    }
-
-    /* Bong bóng chat hướng dẫn (Tooltip) */
-    .zalo-tooltip {
-        background-color: white;
-        color: #333;
-        padding: 8px 16px;
-        border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        font-size: 14px;
-        font-weight: 600;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(-10px);
-        transition: all 0.3s ease;
-        position: absolute;
-        right: 70px; /* Cách nút tròn một chút */
-        top: 12px;
-    }
-    
-    /* Mũi tên nhỏ của tooltip */
-    .zalo-tooltip::after {
-        content: '';
-        position: absolute;
-        right: -6px;
-        top: 50%;
-        transform: translateY(-50%);
-        border-width: 6px 0 6px 6px;
-        border-style: solid;
-        border-color: transparent transparent transparent white;
-    }
-
-    /* Hiển thị tooltip khi hover */
-    .zalo-chat-widget:hover .zalo-tooltip {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-    }
-
-    /* Hiệu ứng rung nhẹ thu hút sự chú ý */
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(0, 104, 255, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); }
-    }
-</style>
-
-<div class="zalo-chat-widget">
-    <!-- Dòng chữ nhắc nhở (Tooltip) -->
-    <div class="zalo-tooltip">Cần hỗ trợ? Chat ngay!</div>
-
-    <!-- Nút bấm chính -->
-    <!-- THAY ĐỔI SỐ ĐIỆN THOẠI CỦA BẠN Ở ĐÂY (bỏ số 0 đầu) -->
-    <!-- Ví dụ: https://zalo.me/84901234567 -->
-    <a href="https://zalo.me/84938715763" target="_blank" class="zalo-btn" title="Chat qua Zalo">
-        <!-- Logo Zalo SVG -->
-        <svg class="zalo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 4C14.0589 4 6 11.1634 6 20C6 24.9655 8.35821 29.3585 12.0728 32.2275C12.3364 32.4334 12.4828 32.7571 12.4435 33.0886L12.0232 36.7212C11.9161 37.6433 12.8711 38.2736 13.6816 37.8202L18.6756 35.0253C18.9669 34.8623 19.3094 34.8222 19.6302 34.908C21.0427 35.2863 22.5029 35.4851 24 35.4851C33.9411 35.4851 42 28.8366 42 20C42 11.1634 33.9411 4 24 4ZM28.536 26.6857H19.7909C18.9912 26.6857 18.5709 25.7481 19.1068 25.1557L21.7251 22.1829H19.7909C19.2386 22.1829 18.7909 21.7351 18.7909 21.1829V18.1829C18.7909 17.6306 19.2386 17.1829 19.7909 17.1829H28.536C29.3357 17.1829 29.756 18.1205 29.2201 18.7129L26.6018 21.6857H28.536C29.0883 21.6857 29.536 22.1335 29.536 22.6857V25.6857C29.536 26.238 29.0883 26.6857 28.536 26.6857Z"/>
-        </svg>
-    </a>
-</div>
-
-<!-- ========================================== -->
-<!-- KẾT THÚC ĐOẠN MÃ WIDGET ZALO -->
-<!-- ========================================== --> 
-<!-- ================================================================= -->
-<!-- BẮT ĐẦU: WIDGET DONATE (Dán vào trước thẻ đóng </body>) -->
-<!-- ================================================================= -->
-
-<style>
-    /* 1. Nút Donate nổi ở góc TRÁI màn hình */
-    .donate-btn-floating {
-        position: fixed;
-        bottom: 20px;
-        left: 20px; /* Muốn chuyển sang phải thì đổi left thành right */
-        z-index: 99999;
-        background: linear-gradient(135deg, #ff3b30, #ff9500);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-        font-size: 15px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        text-decoration: none; /* Phòng trường hợp dán vào thẻ a */
-    }
-    
-    .donate-btn-floating:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.6);
-    }
-
-    .donate-btn-icon { font-size: 18px; }
-
-    /* 2. Modal (Hộp thoại Popup) */
-    .donate-modal-overlay {
-        display: none; /* Mặc định ẩn */
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 100000;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(4px);
-        font-family: Arial, sans-serif;
-    }
-    
-    .donate-modal-content {
-        background: white;
-        padding: 25px;
-        border-radius: 20px;
-        text-align: center;
-        max-width: 380px;
-        width: 90%;
-        position: relative;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        animation: donateFadeIn 0.3s ease-out;
-    }
-
-    @keyframes donateFadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
-    .donate-close-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: #f3f4f6;
-        border: none;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 20px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .donate-close-btn:hover { background: #e5e7eb; color: #111; }
-
-    .donate-qr-img {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        margin: 15px 0;
-        display: block;
-    }
-
-    .donate-info-box {
-        background: #f9fafb;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: left;
-        font-size: 14px;
-        color: #374151;
-    }
-    
-    .donate-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-    
-    .donate-val {
-        font-weight: bold;
-        color: #111827;
-    }
-
-    .donate-copy {
-        color: #2563eb;
-        cursor: pointer;
-        margin-left: 5px;
-        font-size: 12px;
-    }
-</style>
-
-<!-- Nút Mở Modal -->
-<button class="donate-btn-floating" onclick="toggleDonateModal()">
-    <span class="donate-btn-icon">☕</span>
-    <span>Mời ly cà phê</span>
-</button>
-
-<!-- Nội Dung Modal -->
-<div id="donateModal" class="donate-modal-overlay" onclick="handleDonateOutside(event)">
-    <div class="donate-modal-content">
-        <button class="donate-close-btn" onclick="toggleDonateModal()">&times;</button>
-        
-        <h3 style="margin: 0 0 5px 0; font-size: 18px; color: #111;">Cảm ơn bạn đã ủng hộ! ❤️</h3>
-        <p style="margin: 0; color: #6b7280; font-size: 13px;">Quét mã QR để chuyển khoản nhanh</p>
-        
-        <!-- Ảnh QR Code (Tự động tạo) -->
-        <img id="donate-qr-img" src="" alt="QR Code" class="donate-qr-img">
-        
-        <div class="donate-info-box">
-            <div class="donate-row">
-                <span>Ngân hàng:</span>
-                <span class="donate-val" id="donate-bank">MB Bank</span>
-            </div>
-            <div class="donate-row">
-                <span>Chủ tài khoản:</span>
-                <span class="donate-val" id="donate-name" style="text-transform: uppercase;">LÊ THANH THIỆN </span>
-            </div>
-            <div class="donate-row" style="margin-bottom: 0;">
-                <span>Số tài khoản:</span>
-                <span class="donate-val">
-                    <span id="donate-acc">030386868</span>
-                    <span class="donate-copy" onclick="copyDonateSTK()">[Sao chép]</span>
-                </span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    // --- CẤU HÌNH THÔNG TIN CỦA BẠN (SỬA Ở ĐÂY) ---
-    const MY_DONATE_INFO = {
-        BANK_ID: 'MB',        // Mã ngân hàng: MB, VCB, TCB, ACB...
-        ACCOUNT_NO: '030386868',  // Số tài khoản
-        ACCOUNT_NAME: 'LE THANH THIEN' // Tên chủ tài khoản
-    };
-
-    // --- KHÔNG CẦN SỬA CODE DƯỚI ĐÂY ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Tạo link VietQR tự động
-        const qrUrl = `https://img.vietqr.io/image/${MY_DONATE_INFO.BANK_ID}-${MY_DONATE_INFO.ACCOUNT_NO}-compact.jpg?accountName=${encodeURIComponent(MY_DONATE_INFO.ACCOUNT_NAME)}&addInfo=Donate`;
-        
-        // Cập nhật thông tin lên giao diện
-        document.getElementById('donate-qr-img').src = qrUrl;
-        document.getElementById('donate-bank').innerText = MY_DONATE_INFO.BANK_ID;
-        document.getElementById('donate-name').innerText = MY_DONATE_INFO.ACCOUNT_NAME;
-        document.getElementById('donate-acc').innerText = MY_DONATE_INFO.ACCOUNT_NO;
-    });
-
-    function toggleDonateModal() {
-        const modal = document.getElementById('donateModal');
-        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function handleDonateOutside(event) {
-        if (event.target === document.getElementById('donateModal')) toggleDonateModal();
-    }
-
-    function copyDonateSTK() {
-        navigator.clipboard.writeText(MY_DONATE_INFO.ACCOUNT_NO).then(() => {
-            alert('Đã sao chép số tài khoản: ' + MY_DONATE_INFO.ACCOUNT_NO);
-        });
-    }
-</script>
-
-<!-- ================================================================= -->
-<!-- KẾT THÚC: WIDGET DONATE -->
-<!-- ================================================================= -->
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
