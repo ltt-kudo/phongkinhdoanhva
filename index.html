@@ -754,8 +754,204 @@
 <!-- ========================================== -->
 <!-- KẾT THÚC ĐOẠN MÃ WIDGET ZALO -->
 <!-- ========================================== --> 
+<!-- ================================================================= -->
+<!-- BẮT ĐẦU: WIDGET DONATE (Dán vào trước thẻ đóng </body>) -->
+<!-- ================================================================= -->
+
+<style>
+    /* 1. Nút Donate nổi ở góc TRÁI màn hình */
+    .donate-btn-floating {
+        position: fixed;
+        bottom: 20px;
+        left: 20px; /* Muốn chuyển sang phải thì đổi left thành right */
+        z-index: 99999;
+        background: linear-gradient(135deg, #ff3b30, #ff9500);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none; /* Phòng trường hợp dán vào thẻ a */
+    }
+    
+    .donate-btn-floating:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.6);
+    }
+
+    .donate-btn-icon { font-size: 18px; }
+
+    /* 2. Modal (Hộp thoại Popup) */
+    .donate-modal-overlay {
+        display: none; /* Mặc định ẩn */
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 100000;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+        font-family: Arial, sans-serif;
+    }
+    
+    .donate-modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 380px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        animation: donateFadeIn 0.3s ease-out;
+    }
+
+    @keyframes donateFadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .donate-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #f3f4f6;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .donate-close-btn:hover { background: #e5e7eb; color: #111; }
+
+    .donate-qr-img {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        margin: 15px 0;
+        display: block;
+    }
+
+    .donate-info-box {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: left;
+        font-size: 14px;
+        color: #374151;
+    }
+    
+    .donate-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    
+    .donate-val {
+        font-weight: bold;
+        color: #111827;
+    }
+
+    .donate-copy {
+        color: #2563eb;
+        cursor: pointer;
+        margin-left: 5px;
+        font-size: 12px;
+    }
+</style>
+
+<!-- Nút Mở Modal -->
+<button class="donate-btn-floating" onclick="toggleDonateModal()">
+    <span class="donate-btn-icon">☕</span>
+    <span>Mời ly cà phê</span>
+</button>
+
+<!-- Nội Dung Modal -->
+<div id="donateModal" class="donate-modal-overlay" onclick="handleDonateOutside(event)">
+    <div class="donate-modal-content">
+        <button class="donate-close-btn" onclick="toggleDonateModal()">&times;</button>
+        
+        <h3 style="margin: 0 0 5px 0; font-size: 18px; color: #111;">Cảm ơn bạn đã ủng hộ! ❤️</h3>
+        <p style="margin: 0; color: #6b7280; font-size: 13px;">Quét mã QR để chuyển khoản nhanh</p>
+        
+        <!-- Ảnh QR Code (Tự động tạo) -->
+        <img id="donate-qr-img" src="" alt="QR Code" class="donate-qr-img">
+        
+        <div class="donate-info-box">
+            <div class="donate-row">
+                <span>Ngân hàng:</span>
+                <span class="donate-val" id="donate-bank">MB Bank</span>
+            </div>
+            <div class="donate-row">
+                <span>Chủ tài khoản:</span>
+                <span class="donate-val" id="donate-name" style="text-transform: uppercase;">NGUYEN VAN A</span>
+            </div>
+            <div class="donate-row" style="margin-bottom: 0;">
+                <span>Số tài khoản:</span>
+                <span class="donate-val">
+                    <span id="donate-acc">0000000000</span>
+                    <span class="donate-copy" onclick="copyDonateSTK()">[Sao chép]</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- CẤU HÌNH THÔNG TIN CỦA BẠN (SỬA Ở ĐÂY) ---
+    const MY_DONATE_INFO = {
+        BANK_ID: 'MB',        // Mã ngân hàng: MB, VCB, TCB, ACB...
+        ACCOUNT_NO: '030386868',  // Số tài khoản
+        ACCOUNT_NAME: 'LE THANH THIEN' // Tên chủ tài khoản
+    };
+
+    // --- KHÔNG CẦN SỬA CODE DƯỚI ĐÂY ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tạo link VietQR tự động
+        const qrUrl = `https://img.vietqr.io/image/${MY_DONATE_INFO.BANK_ID}-${MY_DONATE_INFO.ACCOUNT_NO}-compact.jpg?accountName=${encodeURIComponent(MY_DONATE_INFO.ACCOUNT_NAME)}&addInfo=Donate`;
+        
+        // Cập nhật thông tin lên giao diện
+        document.getElementById('donate-qr-img').src = qrUrl;
+        document.getElementById('donate-bank').innerText = MY_DONATE_INFO.BANK_ID;
+        document.getElementById('donate-name').innerText = MY_DONATE_INFO.ACCOUNT_NAME;
+        document.getElementById('donate-acc').innerText = MY_DONATE_INFO.ACCOUNT_NO;
+    });
+
+    function toggleDonateModal() {
+        const modal = document.getElementById('donateModal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function handleDonateOutside(event) {
+        if (event.target === document.getElementById('donateModal')) toggleDonateModal();
+    }
+
+    function copyDonateSTK() {
+        navigator.clipboard.writeText(MY_DONATE_INFO.ACCOUNT_NO).then(() => {
+            alert('Đã sao chép số tài khoản: ' + MY_DONATE_INFO.ACCOUNT_NO);
+        });
+    }
+</script>
+
+<!-- ================================================================= -->
+<!-- KẾT THÚC: WIDGET DONATE -->
+<!-- ================================================================= -->
 </body>
 </html>
+
 
 
 
