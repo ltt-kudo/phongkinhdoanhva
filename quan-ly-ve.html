@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Vé - Hệ Thống In & Kiểm Soát</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        @media print {
+            body { background-color: white; font-size: 11pt; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .unit-wrapper { page-break-after: always; margin-bottom: 0 !important; }
+            @page { margin: 0.5cm; size: A4; }
+        }
+        
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .tab-inactive { color: #6b7280; }
+        .tab-inactive:hover { color: #374151; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-sm border-b border-gray-200 no-print sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white">
+                        <i data-lucide="ticket" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Quản Lý Vé</h1>
+                        <p class="text-xs text-gray-500">Hệ thống xuất & kiểm soát vé</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                     <button onclick="document.getElementById('csvFile').click()" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Nhập Excel/CSV
+                    </button>
+                    <input type="file" id="csvFile" accept=".csv" class="hidden" onchange="handleFileUpload(this)">
+                    <button onclick="window.print()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                        <i data-lucide="printer" class="w-4 h-4"></i> In Phiếu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+            <div class="flex gap-6 border-b border-gray-200 overflow-x-auto">
+                <button onclick="switchMainTab('gift')" id="tab-gift" class="pb-3 px-1 text-sm tab-active flex items-center gap-2">
+                    <i data-lucide="gift" class="w-4 h-4"></i> Quản lý Quà Tặng
+                </button>
+                <button onclick="switchMainTab('stats')" id="tab-stats" class="pb-3 px-1 text-sm tab-inactive flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Thống Kê
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Gift Management Tab -->
+        <div id="view-gift" class="space-y-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Tổng phiếu</p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-1" id="total-tickets">0</h3>
+                        </div>
+                        <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <i data-lucide="files" class="w-5 h-5"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Đã phát</p>
+                            <h3 class="text-2xl font-bold text-green-600 mt-1" id="total-delivered">0</h3>
+                        </div>
+                        <span class="p-2 bg-green-50 text-green-600 rounded-lg">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Còn lại</p>
+                            <h3 class="text-2xl font-bold text-orange-600 mt-1" id="total-remaining">0</h3>
+                        </div>
+                        <span class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                            <i data-lucide="package-open" class="w-5 h-5"></i>
+                        </span>
+                    </div>
+                </div>
+                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Tỷ lệ hoàn thành</p>
+                            <h3 class="text-2xl font-bold text-purple-600 mt-1" id="completion-rate">0%</h3>
+                        </div>
+                        <span class="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="gift-list" class="space-y-4">
+                <div class="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                    <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-gray-400 mb-3"></i>
+                    <p class="font-medium">Chưa có dữ liệu</p>
+                    <p class="text-sm mt-1">Vui lòng nhập file CSV để bắt đầu</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="view-stats" class="hidden">
+             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Thống Kê Chi Tiết</h3>
+                </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phân loại</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đã phát</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tỷ lệ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="stats-table-body">
+                                <!-- Generated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- LOGIC XỬ LÝ DỮ LIỆU ---
+        let giftData = [];
+
+        // Khởi tạo icons
+        lucide.createIcons();
+
+        function switchMainTab(tab) {
+            document.getElementById('view-gift').classList.add('hidden');
+            document.getElementById('view-stats').classList.add('hidden');
+            document.getElementById('tab-gift').className = "pb-3 px-1 text-sm tab-inactive flex items-center gap-2";
+            document.getElementById('tab-stats').className = "pb-3 px-1 text-sm tab-inactive flex items-center gap-2";
+
+            if(tab === 'gift') {
+                document.getElementById('view-gift').classList.remove('hidden');
+                document.getElementById('tab-gift').className = "pb-3 px-1 text-sm tab-active flex items-center gap-2";
+            } else {
+                document.getElementById('view-stats').classList.remove('hidden');
+                document.getElementById('tab-stats').className = "pb-3 px-1 text-sm tab-active flex items-center gap-2";
+                renderStatsTable();
+            }
+        }
+
+        function getEncoding(file) { return "UTF-8"; } // Simplified for this context
+
+        function handleFileUpload(input) {
+            const f = input.files[0];
+            if(!f) return;
+            
+            const r = new FileReader();
+            r.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                
+                // Logic parse CSV
+                const d = []; 
+                let valid = 0, skipped = 0; 
+                
+                // Bắt đầu từ dòng 1 (bỏ qua header)
+                for(let i=1; i<rows.length; i++) { 
+                    const c = parseCSV(rows[i]); 
+                    if(c[1] && c[1].trim()) { 
+                        valid++; 
+                        const t = c[2] || ""; // Chức danh/Loại vé
+                        const q = getGiftQuota(t); 
+                        let dq = 0; 
+                        
+                        // Xử lý logic số lượng đã phát (cột 7)
+                        if(c[7] && c[7].match(/\d+/)) dq = parseInt(c[7].match(/\d+/)[0]); 
+                        else if(c[7] && c[7].toLowerCase() === 'x') dq = q; 
+                        
+                        d.push({
+                            name: toTitle(c[1]), 
+                            title: t, 
+                            department: c[3] || "", 
+                            phone: c[4] || "", 
+                            email: c[5] || "", 
+                            session: c[6] || "", 
+                            deliveredQty: dq, 
+                            quota: q
+                        }); 
+                    } else { 
+                        skipped++; 
+                    } 
+                } 
+                giftData = d; 
+                calculateGlobalStats(); 
+                renderGiftList();
+                switchMainTab('gift'); 
+                
+                // Thông báo kết quả
+                // Sử dụng setTimeout để UI update trước khi alert
+                setTimeout(() => {
+                    // alert(`Tìm thấy ${rows.length-1} dòng. Đã nhập ${valid} dòng. Bỏ qua ${skipped} dòng.`);
+                    // Thay alert bằng thông báo trong UI nếu có thể, ở đây dùng console cho sạch
+                    console.log(`Imported: ${valid}, Skipped: ${skipped}`);
+                }, 100);
+            }; 
+            r.readAsText(f, "UTF-8");
+        }
+
+        function parseCSV(text) { 
+            // Regex xử lý CSV chuẩn (có thể có dấu phẩy trong ngoặc kép)
+            const re = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
+            return text.split(re).map(v => v.replace(/^"|"$/g, '').trim()); 
+        }
+
+        function toTitle(s) { 
+            return s ? s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ""; 
+        }
+
+        function getGiftQuota(title) {
+            // Logic giả định quota dựa trên tên
+            // Bạn có thể tùy chỉnh logic này
+            return 1; 
+        }
+
+        function calculateGlobalStats() {
+            if(giftData.length === 0) return;
+            
+            const totalTickets = giftData.reduce((acc, item) => acc + item.quota, 0);
+            const totalDelivered = giftData.reduce((acc, item) => acc + item.deliveredQty, 0);
+            const remaining = totalTickets - totalDelivered;
+            const rate = totalTickets > 0 ? Math.round((totalDelivered / totalTickets) * 100) : 0;
+
+            document.getElementById('total-tickets').innerText = totalTickets;
+            document.getElementById('total-delivered').innerText = totalDelivered;
+            document.getElementById('total-remaining').innerText = remaining;
+            document.getElementById('completion-rate').innerText = `${rate}%`;
+        }
+
+        function renderGiftList() {
+            const container = document.getElementById('gift-list');
+            container.innerHTML = '';
+
+            if(giftData.length === 0) {
+                 container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                        <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-gray-400 mb-3"></i>
+                        <p class="font-medium">Chưa có dữ liệu</p>
+                    </div>`;
+                 lucide.createIcons();
+                 return;
+            }
+
+            // Group data by Department or render flat list based on requirement
+            // Ở đây render dạng danh sách đơn giản cho print
+            
+            giftData.forEach((item, index) => {
+                const isComplete = item.deliveredQty >= item.quota;
+                const div = document.createElement('div');
+                div.className = 'unit-wrapper bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-3 break-inside-avoid';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-900 text-lg">${index + 1}. ${item.name}</h4>
+                            <div class="flex flex-wrap gap-2 mt-1 text-sm text-gray-600">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">${item.department}</span>
+                                <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${item.title}</span>
+                                ${item.phone ? `<span class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3"></i> ${item.phone}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-right pl-4">
+                            <div class="text-2xl font-bold ${isComplete ? 'text-green-600' : 'text-orange-600'}">
+                                ${item.deliveredQty}/${item.quota}
+                            </div>
+                            <div class="text-xs text-gray-500">Đã nhận</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function renderStatsTable() {
+            const tbody = document.getElementById('stats-table-body');
+            tbody.innerHTML = '';
+            
+            // Group by Title
+            const stats = {};
+            giftData.forEach(item => {
+                if(!stats[item.title]) stats[item.title] = { count: 0, delivered: 0, total: 0 };
+                stats[item.title].count++;
+                stats[item.title].delivered += item.deliveredQty;
+                stats[item.title].total += item.quota;
+            });
+
+            Object.keys(stats).forEach(key => {
+                const s = stats[key];
+                const rate = s.total > 0 ? Math.round((s.delivered / s.total) * 100) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${key || 'Khác'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${s.total}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${s.delivered}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center">
+                            <span class="mr-2">${rate}%</span>
+                            <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${rate}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
