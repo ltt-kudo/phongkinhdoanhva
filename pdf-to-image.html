@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Đổi PDF Sang Ảnh</title>
+    <!-- Thư viện CSS & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Thư viện xử lý PDF và ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s ease; }
+        .drop-zone.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-200">
+            <i data-lucide="file-image" class="w-8 h-8 text-white"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">PDF sang Hình Ảnh</h1>
+        <p class="text-gray-500 mt-2">Chuyển đổi miễn phí, an toàn, xử lý ngay tại trình duyệt của bạn</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        
+        <!-- Toolbar -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-wrap gap-4 justify-between items-center">
+            <div class="flex gap-4 items-center">
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Định dạng</label>
+                    <select id="formatSelect" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                        <option value="jpeg">JPG (Nhẹ)</option>
+                        <option value="png">PNG (Nét)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1">Chất lượng (Scale)</label>
+                    <select id="scaleSelect" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
+                        <option value="1.5">1.5x (Chuẩn)</option>
+                        <option value="2" selected>2.0x (Cao)</option>
+                        <option value="3">3.0x (Siêu nét)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="downloadAllBtn" onclick="downloadZip()" disabled class="hidden items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-5 rounded-lg transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                <i data-lucide="download" class="w-4 h-4"></i> Tải về tất cả (ZIP)
+            </button>
+        </div>
+
+        <!-- Drop Zone -->
+        <div class="p-8">
+            <div id="dropZone" class="drop-zone rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer text-center h-64" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" class="hidden" accept="application/pdf" onchange="handleFileSelect(this)">
+                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Kéo thả file PDF vào đây</h3>
+                <p class="text-gray-500 text-sm mt-1">hoặc nhấn để chọn file từ máy tính</p>
+                <p class="text-xs text-gray-400 mt-4">Hỗ trợ PDF nhiều trang</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div id="progressContainer" class="hidden mt-6">
+                <div class="flex justify-between text-sm font-medium text-gray-700 mb-1">
+                    <span id="progressText">Đang xử lý...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="resultsArea" class="bg-gray-50 border-t border-gray-200 p-6 hidden">
+            <h3 class="text-gray-700 font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="image" class="w-5 h-5"></i> Kết quả xem trước
+            </h3>
+            <div id="previewGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Images will be inserted here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-gray-400 text-sm">
+        Hoạt động offline trên trình duyệt
+    </div>
+
+    <script>
+        // Cấu hình Worker cho PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let pdfDoc = null;
+        let zip = new JSZip();
+        let processedImages = [];
+        let currentFileName = "converted_images";
+
+        // Khởi tạo icons
+        lucide.createIcons();
+
+        // Xử lý kéo thả
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleFileSelect(input) {
+            if (input.files.length) {
+                handleFile(input.files[0]);
+            }
+        }
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Vui lòng chọn file PDF!');
+                return;
+            }
+
+            // Reset UI
+            currentFileName = file.name.replace('.pdf', '');
+            document.getElementById('dropZone').classList.add('hidden');
+            document.getElementById('progressContainer').classList.remove('hidden');
+            document.getElementById('resultsArea').classList.remove('hidden');
+            document.getElementById('previewGrid').innerHTML = '';
+            document.getElementById('downloadAllBtn').classList.add('hidden');
+            zip = new JSZip();
+            processedImages = [];
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                document.getElementById('progressText').innerText = `Tìm thấy ${pdfDoc.numPages} trang. Đang chuyển đổi...`;
+                
+                // Bắt đầu xử lý từng trang
+                await processAllPages();
+
+            } catch (error) {
+                console.error(error);
+                alert('Có lỗi xảy ra khi đọc file PDF. File có thể bị hỏng hoặc có mật khẩu.');
+                resetUI();
+            }
+        }
+
+        async function processAllPages() {
+            const scale = parseFloat(document.getElementById('scaleSelect').value);
+            const format = document.getElementById('formatSelect').value; // jpeg or png
+            const quality = 0.9; // Chất lượng ảnh JPEG
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                // Cập nhật tiến trình
+                const percent = Math.round(((i - 1) / pdfDoc.numPages) * 100);
+                updateProgress(percent, `Đang xử lý trang ${i}/${pdfDoc.numPages}`);
+
+                // Render trang
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: scale });
+
+                // Tạo canvas
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                // Chuyển canvas thành ảnh base64
+                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                const dataUrl = canvas.toDataURL(mimeType, quality);
+                
+                // Thêm vào ZIP (bỏ phần header của base64)
+                const imgData = dataUrl.split(',')[1];
+                const fileName = `page_${i.toString().padStart(3, '0')}.${format === 'png' ? 'png' : 'jpg'}`;
+                zip.file(fileName, imgData, {base64: true});
+
+                // Hiển thị preview
+                addPreviewImage(dataUrl, i);
+                
+                // Dọn dẹp bộ nhớ nhẹ
+                canvas.remove();
+            }
+
+            // Hoàn tất
+            updateProgress(100, 'Hoàn tất!');
+            document.getElementById('downloadAllBtn').classList.remove('hidden');
+            document.getElementById('downloadAllBtn').disabled = false;
+            document.getElementById('downloadAllBtn').classList.add('flex');
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressPercent').innerText = `${percent}%`;
+            if(text) document.getElementById('progressText').innerText = text;
+        }
+
+        function addPreviewImage(src, pageNum) {
+            const div = document.createElement('div');
+            div.className = 'relative group bg-white p-2 rounded-lg shadow-sm border border-gray-200 aspect-[3/4] flex items-center justify-center overflow-hidden';
+            
+            div.innerHTML = `
+                <img src="${src}" class="max-w-full max-h-full object-contain shadow-sm" alt="Page ${pageNum}">
+                <div class="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">Trang ${pageNum}</div>
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <a href="${src}" download="${currentFileName}_page_${pageNum}.jpg" class="p-2 bg-white text-gray-800 rounded-full hover:bg-blue-50 transition-colors" title="Tải ảnh này">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            `;
+            document.getElementById('previewGrid').appendChild(div);
+            lucide.createIcons();
+        }
+
+        function downloadZip() {
+            const btn = document.getElementById('downloadAllBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<div class="loader w-4 h-4 border-white border-t-transparent mr-2"></div> Đang nén...`;
+            btn.disabled = true;
+
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, `${currentFileName}_images.zip`);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function resetUI() {
+            document.getElementById('dropZone').classList.remove('hidden');
+            document.getElementById('progressContainer').classList.add('hidden');
+            document.getElementById('resultsArea').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
