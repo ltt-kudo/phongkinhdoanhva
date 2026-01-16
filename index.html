@@ -3,38 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Hub - CONAN TEAM</title>
+    <title>AI Hub - CONAN TEAM (Tet Edition)</title>
+    <!-- Thêm font Playfair Display cho tiêu đề sang trọng hơn -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- CẤU HÌNH MÀU SẮC TẾT DARK MODE --- */
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f1f5f9;
-            --text-sub: #94a3b8;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
+            /* Nền chính: Chuyển từ Xanh đen sang Đỏ đen thẫm */
+            --bg-color: #1a0505; 
+            /* Nền thẻ: Đỏ nâu tối */
+            --card-bg: #2b0c0c;
+            /* Chữ chính: Trắng ngà (dễ đọc trên nền tối) */
+            --text-main: #fffce8;
+            /* Chữ phụ: Vàng nhạt */
+            --text-sub: #d4af37;
+            /* Màu nhấn chính: Vàng kim loại (Thay cho màu xanh cũ) */
+            --accent: #ffd700;
+            /* Màu nhấn phụ: Đỏ tươi */
+            --accent-red: #e60000;
+            /* Màu khi hover */
+            --accent-hover: #ffed4a;
+            
+            --border-color: #4a1515;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            overflow-x: hidden; /* Tránh thanh cuộn ngang do hiệu ứng */
         }
 
-        /* Header */
+        /* --- HIỆU ỨNG HOA RƠI --- */
+        #flower-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- HEADER TẾT --- */
         header {
+            position: relative;
             text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            border-bottom: 1px solid #334155;
+            padding: 50px 20px;
+            /* Gradient đỏ đen sang trọng */
+            background: linear-gradient(180deg, #4a0000 0%, #1a0505 100%);
+            border-bottom: 2px solid var(--accent);
+            z-index: 1;
         }
 
-        h1 { margin: 0; font-size: 2.5rem; color: var(--accent); }
-        p.subtitle { color: var(--text-sub); margin-top: 10px; }
+        h1 { 
+            margin: 0; 
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem; 
+            /* Hiệu ứng chữ mạ vàng */
+            background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        p.subtitle { 
+            color: var(--text-sub); 
+            margin-top: 10px; 
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
 
-        /* Search & Filter */
+        /* --- LỒNG ĐÈN TREO GÓC PHẢI --- */
+        .lantern-container {
+            position: absolute;
+            top: -10px;
+            right: 5%;
+            z-index: 10;
+            animation: swing 4s infinite ease-in-out;
+            transform-origin: top center;
+        }
+        .lantern-line { width: 2px; height: 60px; background: var(--accent); margin: 0 auto; }
+        .lantern-body {
+            width: 60px; height: 50px;
+            background: var(--accent-red);
+            border-radius: 20px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 20px rgba(230, 0, 0, 0.6); /* Phát sáng nhẹ */
+            display: flex; justify-content: center; align-items: center;
+        }
+        .lantern-text { color: var(--accent); font-weight: bold; font-family: serif; font-size: 20px; }
+        .lantern-tassel { width: 4px; height: 30px; background: var(--accent); margin: 0 auto; }
+        @keyframes swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+        /* --- SEARCH & FILTER --- */
         .controls {
             max-width: 1200px;
             margin: 30px auto;
@@ -43,6 +110,8 @@
             flex-direction: column;
             gap: 15px;
             align-items: center;
+            position: relative;
+            z-index: 2;
         }
 
         input#searchBar {
@@ -50,149 +119,204 @@
             max-width: 500px;
             padding: 12px 20px;
             border-radius: 25px;
-            border: 2px solid #334155;
-            background: #0f172a;
-            color: white;
+            border: 1px solid var(--accent);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--accent);
             font-size: 1rem;
             outline: none;
             transition: 0.3s;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
         }
 
-        input#searchBar:focus { border-color: var(--accent); }
+        input#searchBar:focus { 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        input#searchBar::placeholder { color: rgba(212, 175, 55, 0.5); }
 
         .filters button {
             background: transparent;
-            border: 1px solid #334155;
+            border: 1px solid var(--border-color);
             color: var(--text-sub);
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 20px;
             cursor: pointer;
-            margin: 0 5px;
+            margin: 5px;
             transition: 0.3s;
+            font-weight: 500;
         }
 
         .filters button:hover, .filters button.active {
-            background: var(--accent);
+            background: var(--accent-red);
             color: white;
-            border-color: var(--accent);
+            border-color: var(--accent-red);
+            box-shadow: 0 4px 12px rgba(230, 0, 0, 0.3);
         }
 
-        /* App Grid */
+        /* --- APP GRID --- */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 25px;
+            position: relative;
+            z-index: 2;
         }
 
         .card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #334155;
-            transition: transform 0.2s;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        .card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .card:hover { 
+            transform: translateY(-7px); 
+            border-color: var(--accent);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15); /* Ánh sáng vàng khi hover */
+        }
 
-        .card h3 { margin-top: 0; color: white; }
+        .card h3 { 
+            margin-top: 0; 
+            color: var(--text-main); 
+            font-size: 1.25rem;
+        }
+        
         .card .tag {
             display: inline-block;
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
+            background: rgba(212, 175, 55, 0.15); /* Nền vàng nhạt */
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            margin-bottom: 12px;
+            font-weight: bold;
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        .card p { color: var(--text-sub); font-size: 0.95rem; margin-bottom: 20px; }
+        .card p { color: #b0a0a0; font-size: 0.95rem; margin-bottom: 20px; }
 
         .btn-visit {
             display: block;
             text-align: center;
-            background: var(--accent);
-            color: white;
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); /* Nút đỏ trầm */
+            color: white; /* Chữ vàng */
             text-decoration: none;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             font-weight: bold;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            border: 1px solid #7f1d1d;
         }
 
-        .btn-visit:hover { background: var(--accent-hover); }
+        .btn-visit:hover { 
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            transform: translateY(-2px);
+        }
 
-        /* Footer */
+        /* --- FOOTER --- */
         footer {
             text-align: center;
             padding: 40px;
             color: var(--text-sub);
-            border-top: 1px solid #334155;
+            border-top: 1px solid var(--border-color);
             margin-top: 40px;
+            background: linear-gradient(0deg, #4a0000 0%, #1a0505 100%);
+            position: relative;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>AI TOOLKIT 🚀</h1>
-        <p class="subtitle">Kho công cụ được thực hiện bởi các thành viên ẩn danh</p>
-    </header>
+    <!-- Canvas hoa rơi -->
+    <canvas id="flower-canvas"></canvas>
 
-    <div class="container" id="appContainer">
+    <header>
+        <!-- Lồng đèn -->
+        <div class="lantern-container">
+            <div class="lantern-line"></div>
+            <div class="lantern-body">
+                <span class="lantern-text">Tết</span>
+            </div>
+            <div class="lantern-tassel"></div>
         </div>
 
+        <h1>AI TOOLKIT 🚀</h1>
+        <p class="subtitle">Kho công cụ thực hiện bởi các thành viên ẩn danh - Chúc Mừng Năm Mới 2026</p>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="searchBar" placeholder="🔍 Tìm kiếm công cụ (Ví dụ: vòng quay, pdf...)" onkeyup="filterApps()">
+        <div class="filters">
+            <button class="active" onclick="filterCategory('all')">Tất cả</button>
+            <button onclick="filterCategory('Tool')">Tool</button>
+            <button onclick="filterCategory('Game')">Game</button>
+            <button onclick="filterCategory('Office')">Office</button>
+            <button onclick="filterCategory('Design')">Design</button>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
+        <!-- Apps sẽ được render bằng JS -->
+    </div>
+
     <footer>
-        <p>Phát triển nội bộ - Dành cho Team</p>
+        <p>Phát triển nội bộ - Dành cho Team Conan</p>
+        <p style="font-size: 0.8rem; opacity: 0.6;">Xuân Bính Ngọ 2026</p>
     </footer>
 
     <script>
-        // DỮ LIỆU CÔNG CỤ (Bạn chỉnh sửa/thêm mới ở đây)
+        // --- DATA ---
         const apps = [
             {
-                name: "VÒNG QUAY MAY MẮN",
+                name: "VÒNG QUAY MAY MẮN",
                 category: "Game",
-                desc: " Cài đặt vòng quay nhanh chóng , chính xác",
+                desc: "Cài đặt vòng quay nhanh chóng, chính xác.",
                 link: "./vongquay.html"
             },
             {
-      name: "Auto Infographic Maker By Shinichi Kudo",
+                name: "Auto Infographic Maker",
                 category: "Tool",
-                desc: "Công cụ làm báo cáo chuẩn inforgraphic giao diện đẹp.",
+                desc: "Công cụ làm báo cáo chuẩn infographic giao diện đẹp (By Shinichi Kudo).",
                 link: "https://gemini.google.com/gem/1wLALVjb0v6axqi3ui_7K_LV7bUmpZ9uF?usp=sharing"
             },
             {
-          name: "PDF TO IMAGE OFFLINE",
+                name: "PDF TO IMAGE OFFLINE",
                 category: "Tool",
-                desc: "Xuất file pdf thành hình ảnh nhanh chóng. max 100 image.",
+                desc: "Xuất file PDF thành hình ảnh nhanh chóng. Max 100 ảnh.",
                 link: "./pdf-to-image.html"
             },
             {
-              name: "QUẢN LÝ VÉ Maker By Kaito Kid",
+                name: "QUẢN LÝ VÉ (By Kaito Kid)",
                 category: "Office",
-                desc: "Ứng dụng quản lý vé mua bán nội bộ.",
+                desc: "Ứng dụng quản lý vé mua bán nội bộ.",
                 link: "./quan-ly-ve.html"
             },
             {
-                name: "VA Event Management System",
+                name: "VA Event Management",
                 category: "Office",
-                desc: " Lịch Sự Kiện - VA Schools",
+                desc: "Lịch Sự Kiện - VA Schools.",
                 link: "./app su kien.html"
             },
             {
-                name: "RESIZE ẢNH THEO YÊU CẦU",
+                name: "RESIZE ẢNH THEO YÊU CẦU",
                 category: "Design",
-                desc: "Bạn có thể nhập giá trị tuỳ biến theo mong muốn.",
+                desc: "Bạn có thể nhập giá trị tùy biến theo mong muốn.",
                 link: "./thay-doi-kich-thuoc.html"
             }
         ];
 
-        // Hàm hiển thị App
+        // --- RENDER ---
         function renderApps(data) {
             const container = document.getElementById('appContainer');
             container.innerHTML = '';
@@ -204,17 +328,18 @@
                             <h3>${app.name}</h3>
                             <p>${app.desc}</p>
                         </div>
-                        <a href="${app.link}" target="_blank" class="btn-visit">Truy cập ngay</a>
+                        <a href="${app.link}" target="_blank" class="btn-visit">
+                            <i class="fas fa-rocket"></i> Truy cập ngay
+                        </a>
                     </div>
                 `;
                 container.innerHTML += card;
             });
         }
 
-        // Khởi chạy lần đầu
         renderApps(apps);
 
-        // Chức năng Tìm kiếm
+        // --- SEARCH ---
         function filterApps() {
             const query = document.getElementById('searchBar').value.toLowerCase();
             const filtered = apps.filter(app => 
@@ -224,14 +349,12 @@
             renderApps(filtered);
         }
 
-        // Chức năng Lọc theo danh mục
+        // --- FILTER ---
         function filterCategory(cat) {
-            // Đổi màu nút
             const buttons = document.querySelectorAll('.filters button');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Lọc dữ liệu
             if (cat === 'all') {
                 renderApps(apps);
             } else {
@@ -239,323 +362,157 @@
                 renderApps(filtered);
             }
         }
+
+        // --- HIỆU ỨNG HOA RƠI (CANVAS) ---
+        const canvas = document.getElementById('flower-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height;
+                this.size = Math.random() * 8 + 4;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 2 - 1;
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 2 - 1;
+                // Màu hoa Mai (Vàng) và Đào (Hồng nhạt) pha trộn
+                const colors = ['#FFD700', '#FFC0CB', '#F0E68C', '#FFB7C5'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = Math.random() * 0.5 + 0.3; // Mờ mờ để không rối mắt
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y / 50);
+                this.angle += this.spin;
+                if (this.y > height) {
+                    this.y = -20;
+                    this.x = Math.random() * width;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size/2, this.size, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            const count = window.innerWidth < 768 ? 20 : 40;
+            for (let i = 0; i < count; i++) particles.push(new Particle());
+        }
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
     </script>
-<!-- ================================================================= -->
-<!-- BẮT ĐẦU: WIDGET DONATE (Dán vào trước thẻ đóng </body>) -->
-<!-- ================================================================= -->
 
-<style>
-    /* 1. Nút Donate nổi ở góc TRÁI màn hình */
-    .donate-btn-floating {
-        position: fixed;
-        bottom: 20px;
-        left: 20px; /* Muốn chuyển sang phải thì đổi left thành right */
-        z-index: 99999;
-        background: linear-gradient(135deg, #ff3b30, #ff9500);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-        font-size: 15px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        text-decoration: none; /* Phòng trường hợp dán vào thẻ a */
-    }
-    
-    .donate-btn-floating:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.6);
-    }
+    <!-- ================================================================= -->
+    <!-- WIDGET DONATE (GIỮ NGUYÊN) -->
+    <!-- ================================================================= -->
+    <style>
+        .donate-btn-floating {
+            position: fixed; bottom: 20px; left: 20px; z-index: 99999;
+            background: linear-gradient(135deg, #ff3b30, #ff9500);
+            color: white; border: none; padding: 12px 24px; border-radius: 50px;
+            font-family: Arial, sans-serif; font-weight: bold; font-size: 15px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4); display: flex; align-items: center; gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .donate-btn-floating:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 59, 48, 0.6); }
+        .donate-btn-icon { font-size: 18px; }
+        .donate-modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 100000; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px); font-family: Arial, sans-serif;
+        }
+        .donate-modal-content {
+            background: #1e1e1e; /* Modal tối màu */
+            color: white;
+            padding: 25px; border-radius: 20px; text-align: center; max-width: 380px; width: 90%;
+            position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            animation: donateFadeIn 0.3s ease-out; border: 1px solid #333;
+        }
+        @keyframes donateFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .donate-close-btn {
+            position: absolute; top: 15px; right: 15px; background: #333; border: none;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 20px;
+            color: #ccc; display: flex; align-items: center; justify-content: center;
+        }
+        .donate-close-btn:hover { background: #444; color: white; }
+        .donate-qr-img { width: 100%; border-radius: 12px; margin: 15px 0; border: 2px solid #444; }
+        .donate-info-box { background: #2d2d2d; padding: 15px; border-radius: 12px; text-align: left; font-size: 14px; color: #ccc; }
+        .donate-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .donate-val { font-weight: bold; color: #fff; }
+        .donate-copy { color: #3b82f6; cursor: pointer; margin-left: 5px; font-size: 12px; }
+    </style>
 
-    .donate-btn-icon { font-size: 18px; }
-
-    /* 2. Modal (Hộp thoại Popup) */
-    .donate-modal-overlay {
-        display: none; /* Mặc định ẩn */
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 100000;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(4px);
-        font-family: Arial, sans-serif;
-    }
-    
-    .donate-modal-content {
-        background: white;
-        padding: 25px;
-        border-radius: 20px;
-        text-align: center;
-        max-width: 380px;
-        width: 90%;
-        position: relative;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        animation: donateFadeIn 0.3s ease-out;
-    }
-
-    @keyframes donateFadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
-    .donate-close-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: #f3f4f6;
-        border: none;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 20px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .donate-close-btn:hover { background: #e5e7eb; color: #111; }
-
-    .donate-qr-img {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        margin: 15px 0;
-        display: block;
-    }
-
-    .donate-info-box {
-        background: #f9fafb;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: left;
-        font-size: 14px;
-        color: #374151;
-    }
-    
-    .donate-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-    }
-    
-    .donate-val {
-        font-weight: bold;
-        color: #111827;
-    }
-
-    .donate-copy {
-        color: #2563eb;
-        cursor: pointer;
-        margin-left: 5px;
-        font-size: 12px;
-    }
-</style>
-
-<!-- Nút Mở Modal -->
-<button class="donate-btn-floating" onclick="toggleDonateModal()">
-    <span class="donate-btn-icon">☕</span>
-    <span>Mời ly cà phê</span>
-</button>
-
-<!-- Nội Dung Modal -->
-<div id="donateModal" class="donate-modal-overlay" onclick="handleDonateOutside(event)">
-    <div class="donate-modal-content">
-        <button class="donate-close-btn" onclick="toggleDonateModal()">&times;</button>
-        
-        <h3 style="margin: 0 0 5px 0; font-size: 18px; color: #111;">Cảm ơn bạn đã ủng hộ! ❤️</h3>
-        <p style="margin: 0; color: #6b7280; font-size: 13px;">Quét mã QR để chuyển khoản nhanh</p>
-        
-        <!-- Ảnh QR Code (Tự động tạo) -->
-        <img id="donate-qr-img" src="" alt="QR Code" class="donate-qr-img">
-        
-        <div class="donate-info-box">
-            <div class="donate-row">
-                <span>Ngân hàng:</span>
-                <span class="donate-val" id="donate-bank">MB Bank</span>
-            </div>
-            <div class="donate-row">
-                <span>Chủ tài khoản:</span>
-                <span class="donate-val" id="donate-name" style="text-transform: uppercase;">LE THANH THIEN</span>
-            </div>
-            <div class="donate-row" style="margin-bottom: 0;">
-                <span>Số tài khoản:</span>
-                <span class="donate-val">
-                    <span id="donate-acc">030386868</span>
-                    <span class="donate-copy" onclick="copyDonateSTK()">[Sao chép]</span>
-                </span>
+    <button class="donate-btn-floating" onclick="toggleDonateModal()">
+        <span class="donate-btn-icon">☕</span><span>Mời ly cà phê</span>
+    </button>
+    <div id="donateModal" class="donate-modal-overlay" onclick="handleDonateOutside(event)">
+        <div class="donate-modal-content">
+            <button class="donate-close-btn" onclick="toggleDonateModal()">&times;</button>
+            <h3 style="margin: 0 0 5px 0; font-size: 18px; color: #fff;">Cảm ơn bạn đã ủng hộ! ❤️</h3>
+            <p style="margin: 0; color: #aaa; font-size: 13px;">Quét mã QR để chuyển khoản nhanh</p>
+            <img id="donate-qr-img" src="" alt="QR Code" class="donate-qr-img">
+            <div class="donate-info-box">
+                <div class="donate-row"><span>Ngân hàng:</span><span class="donate-val" id="donate-bank">MB Bank</span></div>
+                <div class="donate-row"><span>Chủ tài khoản:</span><span class="donate-val" id="donate-name" style="text-transform: uppercase;">LE THANH THIEN</span></div>
+                <div class="donate-row" style="margin-bottom: 0;"><span>Số tài khoản:</span><span class="donate-val"><span id="donate-acc">030386868</span><span class="donate-copy" onclick="copyDonateSTK()">[Sao chép]</span></span></div>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-    // --- CẤU HÌNH THÔNG TIN CỦA BẠN (SỬA Ở ĐÂY) ---
-    const MY_DONATE_INFO = {
-        BANK_ID: 'MB',        // Mã ngân hàng: MB, VCB, TCB, ACB...
-        ACCOUNT_NO: '030386868',  // Số tài khoản
-        ACCOUNT_NAME: 'LE THANH THIEN' // Tên chủ tài khoản
-    };
-
-    // --- KHÔNG CẦN SỬA CODE DƯỚI ĐÂY ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Tạo link VietQR tự động
-        const qrUrl = `https://img.vietqr.io/image/${MY_DONATE_INFO.BANK_ID}-${MY_DONATE_INFO.ACCOUNT_NO}-compact.jpg?accountName=${encodeURIComponent(MY_DONATE_INFO.ACCOUNT_NAME)}&addInfo=Donate`;
-        
-        // Cập nhật thông tin lên giao diện
-        document.getElementById('donate-qr-img').src = qrUrl;
-        document.getElementById('donate-bank').innerText = MY_DONATE_INFO.BANK_ID;
-        document.getElementById('donate-name').innerText = MY_DONATE_INFO.ACCOUNT_NAME;
-        document.getElementById('donate-acc').innerText = MY_DONATE_INFO.ACCOUNT_NO;
-    });
-
-    function toggleDonateModal() {
-        const modal = document.getElementById('donateModal');
-        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function handleDonateOutside(event) {
-        if (event.target === document.getElementById('donateModal')) toggleDonateModal();
-    }
-
-    function copyDonateSTK() {
-        navigator.clipboard.writeText(MY_DONATE_INFO.ACCOUNT_NO).then(() => {
-            alert('Đã sao chép số tài khoản: ' + MY_DONATE_INFO.ACCOUNT_NO);
+    <script>
+        const MY_DONATE_INFO = { BANK_ID: 'MB', ACCOUNT_NO: '030386868', ACCOUNT_NAME: 'LE THANH THIEN' };
+        document.addEventListener('DOMContentLoaded', () => {
+            const qrUrl = `https://img.vietqr.io/image/${MY_DONATE_INFO.BANK_ID}-${MY_DONATE_INFO.ACCOUNT_NO}-compact.jpg?accountName=${encodeURIComponent(MY_DONATE_INFO.ACCOUNT_NAME)}&addInfo=Donate`;
+            document.getElementById('donate-qr-img').src = qrUrl;
+            document.getElementById('donate-bank').innerText = MY_DONATE_INFO.BANK_ID;
+            document.getElementById('donate-name').innerText = MY_DONATE_INFO.ACCOUNT_NAME;
+            document.getElementById('donate-acc').innerText = MY_DONATE_INFO.ACCOUNT_NO;
         });
-    }
-</script>
+        function toggleDonateModal() { const modal = document.getElementById('donateModal'); modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex'; }
+        function handleDonateOutside(event) { if (event.target === document.getElementById('donateModal')) toggleDonateModal(); }
+        function copyDonateSTK() { navigator.clipboard.writeText(MY_DONATE_INFO.ACCOUNT_NO).then(() => { alert('Đã sao chép số tài khoản: ' + MY_DONATE_INFO.ACCOUNT_NO); }); }
+    </script>
 
-<!-- ================================================================= -->
-<!-- KẾT THÚC: WIDGET DONATE -->
-<!-- ================================================================= -->
-<!-- ========================================== -->
-<!-- BẮT ĐẦU ĐOẠN MÃ WIDGET ZALO -->
-<!-- Hãy dán đoạn này vào trước thẻ đóng </body> trong file index.html của bạn -->
-<!-- ========================================== -->
-
-<style>
-    /* CSS cho nút Zalo nổi */
-    .zalo-chat-widget {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999; /* Đảm bảo luôn nổi trên cùng */
-        display: flex;
-        flex-direction: column;
-        align-items: end;
-        gap: 10px;
-        font-family: Arial, sans-serif;
-    }
-
-    /* Nút tròn icon Zalo */
-    .zalo-btn {
-        width: 60px;
-        height: 60px;
-        background-color: #0068ff; /* Màu xanh chuẩn Zalo */
-        border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 104, 255, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        text-decoration: none;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        animation: pulse 2s infinite;
-    }
-
-    .zalo-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(0, 104, 255, 0.5);
-    }
-
-    /* Icon Zalo (dùng SVG nội tuyến để không bị lỗi ảnh) */
-    .zalo-icon {
-        width: 35px;
-        height: 35px;
-        fill: white;
-    }
-
-    /* Bong bóng chat hướng dẫn (Tooltip) */
-    .zalo-tooltip {
-        background-color: white;
-        color: #333;
-        padding: 8px 16px;
-        border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        font-size: 14px;
-        font-weight: 600;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(-10px);
-        transition: all 0.3s ease;
-        position: absolute;
-        right: 70px; /* Cách nút tròn một chút */
-        top: 12px;
-    }
-    
-    /* Mũi tên nhỏ của tooltip */
-    .zalo-tooltip::after {
-        content: '';
-        position: absolute;
-        right: -6px;
-        top: 50%;
-        transform: translateY(-50%);
-        border-width: 6px 0 6px 6px;
-        border-style: solid;
-        border-color: transparent transparent transparent white;
-    }
-
-    /* Hiển thị tooltip khi hover */
-    .zalo-chat-widget:hover .zalo-tooltip {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-    }
-
-    /* Hiệu ứng rung nhẹ thu hút sự chú ý */
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(0, 104, 255, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); }
-    }
-</style>
-
-<div class="zalo-chat-widget">
-    <!-- Dòng chữ nhắc nhở (Tooltip) -->
-    <div class="zalo-tooltip">LIÊN HỆ NGAY ĐỂ HỔ TRỢ</div>
-
-    <!-- Nút bấm chính -->
-    <!-- THAY ĐỔI SỐ ĐIỆN THOẠI CỦA BẠN Ở ĐÂY (bỏ số 0 đầu) -->
-    <!-- Ví dụ: https://zalo.me/84901234567 -->
-    <a href="https://zalo.me/84938715763" target="_blank" class="zalo-btn" title="Chat qua Zalo">
-        <!-- Logo Zalo SVG -->
-        <svg class="zalo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 4C14.0589 4 6 11.1634 6 20C6 24.9655 8.35821 29.3585 12.0728 32.2275C12.3364 32.4334 12.4828 32.7571 12.4435 33.0886L12.0232 36.7212C11.9161 37.6433 12.8711 38.2736 13.6816 37.8202L18.6756 35.0253C18.9669 34.8623 19.3094 34.8222 19.6302 34.908C21.0427 35.2863 22.5029 35.4851 24 35.4851C33.9411 35.4851 42 28.8366 42 20C42 11.1634 33.9411 4 24 4ZM28.536 26.6857H19.7909C18.9912 26.6857 18.5709 25.7481 19.1068 25.1557L21.7251 22.1829H19.7909C19.2386 22.1829 18.7909 21.7351 18.7909 21.1829V18.1829C18.7909 17.6306 19.2386 17.1829 19.7909 17.1829H28.536C29.3357 17.1829 29.756 18.1205 29.2201 18.7129L26.6018 21.6857H28.536C29.0883 21.6857 29.536 22.1335 29.536 22.6857V25.6857C29.536 26.238 29.0883 26.6857 28.536 26.6857Z"/>
-        </svg>
-    </a>
-</div>
-
-<!-- ========================================== -->
-<!-- KẾT THÚC ĐOẠN MÃ WIDGET ZALO -->
-<!-- ========================================== -->
+    <!-- ================================================================= -->
+    <!-- WIDGET ZALO (GIỮ NGUYÊN) -->
+    <!-- ================================================================= -->
+    <style>
+        .zalo-chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; align-items: end; gap: 10px; font-family: Arial, sans-serif; }
+        .zalo-btn { width: 60px; height: 60px; background-color: #0068ff; border-radius: 50%; box-shadow: 0 4px 12px rgba(0, 104, 255, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; transition: transform 0.3s ease, box-shadow 0.3s ease; animation: pulse 2s infinite; }
+        .zalo-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0, 104, 255, 0.5); }
+        .zalo-icon { width: 35px; height: 35px; fill: white; }
+        .zalo-tooltip { background-color: white; color: #333; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 14px; font-weight: 600; white-space: nowrap; opacity: 0; visibility: hidden; transform: translateX(-10px); transition: all 0.3s ease; position: absolute; right: 70px; top: 12px; }
+        .zalo-tooltip::after { content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); border-width: 6px 0 6px 6px; border-style: solid; border-color: transparent transparent transparent white; }
+        .zalo-chat-widget:hover .zalo-tooltip { opacity: 1; visibility: visible; transform: translateX(0); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 104, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 104, 255, 0); } }
+    </style>
+    <div class="zalo-chat-widget">
+        <div class="zalo-tooltip">LIÊN HỆ NGAY ĐỂ HỔ TRỢ</div>
+        <a href="https://zalo.me/84938715763" target="_blank" class="zalo-btn" title="Chat qua Zalo">
+            <svg class="zalo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M24 4C14.0589 4 6 11.1634 6 20C6 24.9655 8.35821 29.3585 12.0728 32.2275C12.3364 32.4334 12.4828 32.7571 12.4435 33.0886L12.0232 36.7212C11.9161 37.6433 12.8711 38.2736 13.6816 37.8202L18.6756 35.0253C18.9669 34.8623 19.3094 34.8222 19.6302 34.908C21.0427 35.2863 22.5029 35.4851 24 35.4851C33.9411 35.4851 42 28.8366 42 20C42 11.1634 33.9411 4 24 4ZM28.536 26.6857H19.7909C18.9912 26.6857 18.5709 25.7481 19.1068 25.1557L21.7251 22.1829H19.7909C19.2386 22.1829 18.7909 21.7351 18.7909 21.1829V18.1829C18.7909 17.6306 19.2386 17.1829 19.7909 17.1829H28.536C29.3357 17.1829 29.756 18.1205 29.2201 18.7129L26.6018 21.6857H28.536C29.0883 21.6857 29.536 22.1335 29.536 22.6857V25.6857C29.536 26.238 29.0883 26.6857 28.536 26.6857Z"/></svg>
+        </a>
+    </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
