@@ -101,57 +101,71 @@
         .lantern-tassel { width: 4px; height: 30px; background: var(--accent); margin: 0 auto; }
         @keyframes swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
 
-        /* --- SEARCH & FILTER --- */
-        .controls {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
+        /* --- COUNTDOWN TIMER (THAY CHO SEARCH) --- */
+        .countdown-wrapper {
+            max-width: 800px;
+            margin: -25px auto 40px auto; /* Đẩy lên chèn nhẹ vào header hoặc sát header */
             position: relative;
             z-index: 2;
+            text-align: center;
         }
 
-        input#searchBar {
-            width: 100%;
-            max-width: 500px;
-            padding: 12px 20px;
-            border-radius: 25px;
+        .countdown-title {
+            color: #b0a0a0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item {
+            background: rgba(43, 12, 12, 0.9); /* Màu nền đỏ tối trong suốt */
             border: 1px solid var(--accent);
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--accent);
-            font-size: 1rem;
-            outline: none;
-            transition: 0.3s;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
-        }
-
-        input#searchBar:focus { 
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 10px;
+            border-radius: 12px;
+            min-width: 90px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2); /* Đổ bóng vàng */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
         }
         
-        input#searchBar::placeholder { color: rgba(212, 175, 55, 0.5); }
-
-        .filters button {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-sub);
-            padding: 8px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin: 5px;
-            transition: 0.3s;
-            font-weight: 500;
+        /* Hiệu ứng bóng lóa nhẹ trên ô số */
+        .countdown-item::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
         }
 
-        .filters button:hover, .filters button.active {
-            background: var(--accent-red);
-            color: white;
-            border-color: var(--accent-red);
-            box-shadow: 0 4px 12px rgba(230, 0, 0, 0.3);
+        .countdown-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .countdown-label {
+            color: #d8c0c0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 500;
         }
 
         /* --- APP GRID --- */
@@ -234,6 +248,13 @@
             position: relative;
             z-index: 2;
         }
+        
+        /* Responsive countdown */
+        @media (max-width: 600px) {
+            .countdown-item { min-width: 65px; padding: 10px 5px; }
+            .countdown-number { font-size: 1.5rem; }
+            .countdown-label { font-size: 0.65rem; }
+        }
     </style>
 </head>
 <body>
@@ -252,17 +273,29 @@
         </div>
 
         <h1>AI TOOLKIT 🚀</h1>
-        <p class="subtitle">Kho công cụ thực hiện bởi các thành viên ẩn danh - Chúc Mừng Năm Mới 2026</p>
+        <p class="subtitle">Kho công cụ thực hiện bởi các thành viên ẩn danh</p>
     </header>
 
-    <div class="controls">
-        <input type="text" id="searchBar" placeholder="🔍 Tìm kiếm công cụ (Ví dụ: vòng quay, pdf...)" onkeyup="filterApps()">
-        <div class="filters">
-            <button class="active" onclick="filterCategory('all')">Tất cả</button>
-            <button onclick="filterCategory('Tool')">Tool</button>
-            <button onclick="filterCategory('Game')">Game</button>
-            <button onclick="filterCategory('Office')">Office</button>
-            <button onclick="filterCategory('Design')">Design</button>
+    <!-- COUNTDOWN SECTION (Thay thế cho Search/Filter) -->
+    <div class="countdown-wrapper">
+        <div class="countdown-title">Sắp đến Tết Bính Ngọ 2026</div>
+        <div class="countdown-container" id="tetCountdown">
+            <div class="countdown-item">
+                <div class="countdown-number" id="days">00</div>
+                <div class="countdown-label">Ngày</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="hours">00</div>
+                <div class="countdown-label">Giờ</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="minutes">00</div>
+                <div class="countdown-label">Phút</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-number" id="seconds">00</div>
+                <div class="countdown-label">Giây</div>
+            </div>
         </div>
     </div>
 
@@ -316,7 +349,7 @@
             }
         ];
 
-        // --- RENDER ---
+        // --- RENDER APPS (Không còn bộ lọc, chỉ render hết) ---
         function renderApps(data) {
             const container = document.getElementById('appContainer');
             container.innerHTML = '';
@@ -336,32 +369,37 @@
                 container.innerHTML += card;
             });
         }
-
         renderApps(apps);
 
-        // --- SEARCH ---
-        function filterApps() {
-            const query = document.getElementById('searchBar').value.toLowerCase();
-            const filtered = apps.filter(app => 
-                app.name.toLowerCase().includes(query) || 
-                app.desc.toLowerCase().includes(query)
-            );
-            renderApps(filtered);
-        }
+        // --- COUNTDOWN LOGIC ---
+        // Mùng 1 Tết Bính Ngọ 2026 là ngày 17/02/2026 Dương Lịch
+        const tetDate = new Date("February 17, 2026 00:00:00").getTime();
 
-        // --- FILTER ---
-        function filterCategory(cat) {
-            const buttons = document.querySelectorAll('.filters button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = tetDate - now;
 
-            if (cat === 'all') {
-                renderApps(apps);
-            } else {
-                const filtered = apps.filter(app => app.category === cat);
-                renderApps(filtered);
+            if (distance < 0) {
+                // Nếu đã qua Tết
+                document.getElementById("tetCountdown").innerHTML = 
+                    "<h2 style='color:var(--accent); font-family:\"Playfair Display\"; font-size:2rem;'>CHÚC MỪNG NĂM MỚI!</h2>";
+                return;
             }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Cập nhật DOM
+            document.getElementById("days").innerText = days < 10 ? "0" + days : days;
+            document.getElementById("hours").innerText = hours < 10 ? "0" + hours : hours;
+            document.getElementById("minutes").innerText = minutes < 10 ? "0" + minutes : minutes;
+            document.getElementById("seconds").innerText = seconds < 10 ? "0" + seconds : seconds;
         }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown(); // Chạy ngay lập tức để không bị delay 1s đầu
 
         // --- HIỆU ỨNG HOA RƠI (CANVAS) ---
         const canvas = document.getElementById('flower-canvas');
@@ -385,10 +423,9 @@
                 this.speedX = Math.random() * 2 - 1;
                 this.angle = Math.random() * 360;
                 this.spin = Math.random() * 2 - 1;
-                // Màu hoa Mai (Vàng) và Đào (Hồng nhạt) pha trộn
                 const colors = ['#FFD700', '#FFC0CB', '#F0E68C', '#FFB7C5'];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
-                this.opacity = Math.random() * 0.5 + 0.3; // Mờ mờ để không rối mắt
+                this.opacity = Math.random() * 0.5 + 0.3; 
             }
             update() {
                 this.y += this.speedY;
