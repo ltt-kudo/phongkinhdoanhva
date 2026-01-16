@@ -1,0 +1,312 @@
+<style>
+    /* CSS cho giao diện đẹp */
+    .rs-widget-card {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        max-width: 550px;
+        margin: 20px auto;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+    }
+
+    .rs-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    .rs-header h3 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+
+    .rs-body { padding: 25px; }
+
+    .rs-section { margin-bottom: 25px; }
+    .rs-label-title { display: block; font-weight: 600; margin-bottom: 10px; color: #333; }
+
+    /* Custom file input styling */
+    .rs-file-upload-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+    .rs-file-upload-btn {
+        border: 2px dashed #ccc;
+        color: #666;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+        font-weight: 500;
+    }
+    .rs-file-upload-btn:hover { border-color: #764ba2; color: #764ba2; background: #f0eaff; }
+    .rs-file-upload-wrapper input[type=file] {
+        font-size: 100px;
+        position: absolute;
+        left: 0; top: 0; opacity: 0;
+        cursor: pointer; height: 100%; width: 100%;
+    }
+
+    /* Preview Area */
+    .rs-preview-container {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f0f2f5;
+        text-align: center;
+        display: none; /* Ẩn mặc định */
+    }
+    .rs-preview-container img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border: 2px solid #fff;
+    }
+
+    /* Controls styling */
+    .rs-controls-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .rs-checkbox-group {
+        display: flex; align-items: center; margin-bottom: 15px;
+        color: #555; font-weight: 500;
+    }
+    .rs-checkbox-group input { margin-right: 10px; transform: scale(1.2); cursor: pointer; }
+
+    .rs-input-flex { display: flex; gap: 20px; }
+    .rs-input-group { flex: 1; }
+    .rs-input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #666; }
+    .rs-input-styled {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border 0.3s;
+        box-sizing: border-box;
+    }
+    .rs-input-styled:focus { border-color: #764ba2; outline: none; box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2); }
+
+    .rs-meta-info { margin-top: 10px; font-size: 0.9rem; color: #777; text-align: right; }
+
+    /* Button Styling */
+    .rs-btn-download {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 600;
+        width: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        display: flex; justify-content: center; align-items: center; gap: 10px;
+    }
+    .rs-btn-download:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+        background: linear-gradient(135deg, #2dbc4e 0%, #24963e 100%);
+    }
+    .rs-btn-download:disabled {
+        background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; opacity: 0.7;
+    }
+    .rs-hidden { display: none; }
+</style>
+
+<div class="rs-widget-card">
+    <div class="rs-header">
+        <h3>✨ Công cụ Resize Ảnh Pro</h3>
+    </div>
+
+    <div class="rs-body">
+        <div class="rs-section">
+            <label class="rs-label-title">1. Chọn ảnh của bạn:</label>
+            <div class="rs-file-upload-wrapper">
+                <button class="rs-file-upload-btn">📂 Bấm vào đây để chọn ảnh...</button>
+                <input type="file" id="rs-fileInput" accept="image/*">
+            </div>
+
+            <div id="rs-previewContainer" class="rs-preview-container">
+                 <p style="margin: 5px 0; font-size: 0.9rem; color: #666;">Xem trước ảnh gốc:</p>
+                <img id="rs-previewImage" src="" alt="Ảnh xem trước">
+            </div>
+        </div>
+
+        <div class="rs-section">
+            <label class="rs-label-title">2. Nhập kích thước mới (px):</label>
+            <div class="rs-controls-box">
+                <div class="rs-checkbox-group">
+                    <input type="checkbox" id="rs-lockRatio" checked>
+                    <label for="rs-lockRatio" style="cursor: pointer;">🔒 Khoá tỷ lệ (Giữ dáng ảnh không bị méo)</label>
+                </div>
+
+                <div class="rs-input-flex">
+                    <div class="rs-input-group">
+                        <label for="rs-inputX">Chiều ngang (X)</label>
+                        <input type="number" id="rs-inputX" class="rs-input-styled" placeholder="Ví dụ: 800">
+                    </div>
+                    <div class="rs-input-group">
+                        <label for="rs-inputY">Chiều dọc (Y)</label>
+                        <input type="number" id="rs-inputY" class="rs-input-styled" placeholder="Ví dụ: 600">
+                    </div>
+                </div>
+                <div class="rs-meta-info">
+                    Kích thước gốc: <span id="rs-orgSize" style="font-weight: bold;">...</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="rs-downloadBtn" class="rs-btn-download" disabled>
+            <span>⬇️ Tải ảnh đã Resize</span>
+        </button>
+    </div>
+    
+    <canvas id="rs-canvas" class="rs-hidden"></canvas>
+</div>
+
+<script>
+(function() {
+    // Elements references
+    const fileInput = document.getElementById('rs-fileInput');
+    const uploadBtnLabel = document.querySelector('.rs-file-upload-btn');
+    const previewContainer = document.getElementById('rs-previewContainer');
+    const previewImage = document.getElementById('rs-previewImage');
+    
+    const inputX = document.getElementById('rs-inputX');
+    const inputY = document.getElementById('rs-inputY');
+    const lockRatio = document.getElementById('rs-lockRatio');
+    const orgSizeSpan = document.getElementById('rs-orgSize');
+    const downloadBtn = document.getElementById('rs-downloadBtn');
+    const canvas = document.getElementById('rs-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let originalImage = new Image();
+    let originalWidth = 0;
+    let originalHeight = 0;
+    let aspectRatio = 0;
+    let fileName = '';
+
+    // 1. Khi chọn file
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Update label nút chọn file
+            uploadBtnLabel.textContent = "📄 Đã chọn: " + file.name;
+            fileName = file.name.split('.')[0];
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                // Hiển thị ảnh xem trước
+                previewImage.src = event.target.result;
+                previewContainer.style.display = 'block'; // Hiện khung xem trước
+
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    originalWidth = this.width;
+                    originalHeight = this.height;
+                    aspectRatio = originalWidth / originalHeight;
+
+                    // Update UI inputs và thông tin
+                    inputX.value = originalWidth;
+                    inputY.value = originalHeight;
+                    orgSizeSpan.textContent = `${originalWidth} x ${originalHeight} px`;
+                    
+                    // Kích hoạt nút download
+                    downloadBtn.disabled = false;
+                }
+                originalImage.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        } else {
+            // Reset nếu user hủy chọn
+            resetUI();
+        }
+    });
+    
+    function resetUI() {
+         uploadBtnLabel.textContent = "📂 Bấm vào đây để chọn ảnh...";
+         previewContainer.style.display = 'none';
+         previewImage.src = "";
+         inputX.value = "";
+         inputY.value = "";
+         orgSizeSpan.textContent = "...";
+         downloadBtn.disabled = true;
+         originalWidth = 0; originalHeight = 0; aspectRatio = 0;
+    }
+
+    // 2. Logic tính toán X
+    inputX.addEventListener('input', function() {
+        if (lockRatio.checked && aspectRatio > 0) {
+            const xVal = parseFloat(this.value);
+            if (!isNaN(xVal) && xVal > 0) {
+                inputY.value = Math.round(xVal / aspectRatio);
+            }
+        }
+    });
+
+    // 3. Logic tính toán Y
+    inputY.addEventListener('input', function() {
+        if (lockRatio.checked && aspectRatio > 0) {
+            const yVal = parseFloat(this.value);
+            if (!isNaN(yVal) && yVal > 0) {
+                inputX.value = Math.round(yVal * aspectRatio);
+            }
+        }
+    });
+    
+    // Xử lý khi click/unclick khóa tỷ lệ
+    lockRatio.addEventListener('change', function(){
+         if(this.checked && aspectRatio > 0 && inputX.value) {
+              // Recalculate Y based on X when locked again
+              inputX.dispatchEvent(new Event('input'));
+         }
+    });
+
+    // 4. Xử lý Resize và Download
+    downloadBtn.addEventListener('click', function() {
+        const newWidth = parseInt(inputX.value);
+        const newHeight = parseInt(inputY.value);
+
+        if (!newWidth || !newHeight || newWidth <= 0 || newHeight <= 0) {
+            alert("Vui lòng nhập kích thước hợp lệ (lớn hơn 0)!");
+            return;
+        }
+        
+        // Hiệu ứng nút bấm
+        const originalBtnText = this.innerHTML;
+        this.innerHTML = "⏳ Đang xử lý...";
+        this.disabled = true;
+
+        // Sử dụng setTimeout để UI có thời gian cập nhật trước khi xử lý nặng
+        setTimeout(() => {
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+
+            const link = document.createElement('a');
+            link.download = `${fileName}_resized_${newWidth}x${newHeight}.jpg`;
+            // Xuất ảnh JPEG chất lượng cao (0.92)
+            link.href = canvas.toDataURL('image/jpeg', 0.92);
+            link.click();
+            
+            // Trả lại trạng thái nút
+            this.innerHTML = originalBtnText;
+            this.disabled = false;
+        }, 100);
+    });
+})();
+</script>
