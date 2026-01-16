@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Hub - LỘN XỘN TEAM</title>
+    <title>AI Hub - Văn Phòng</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -141,8 +141,21 @@
 
     <header>
         <h1>AI TOOLKIT 🚀</h1>
-        <p class="subtitle">Kho công cụ được các ẩn danh phòng Kinh Doanh - Va Schools thực hiện </p>
+        <p class="subtitle">Kho công cụ AI miễn phí dành cho văn phòng chúng ta</p>
     </header>
+
+    <div class="controls">
+        <input type="text" id="searchBar" placeholder="Tìm kiếm công cụ (ví dụ: ChatGPT, Excel...)" onkeyup="filterApps()">
+        <div class="filters" id="filterContainer">
+            <button class="active" onclick="filterCategory('all')">Tất cả</button>
+            <button onclick="filterCategory('Chat')">Chat/Trợ lý</button>
+            <button onclick="filterCategory('Design')">Hình ảnh</button>
+            <button onclick="filterCategory('Office')">Văn phòng</button>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
+        </div>
 
     <footer>
         <p>Phát triển nội bộ - Dành cho Team</p>
@@ -152,28 +165,28 @@
         // DỮ LIỆU CÔNG CỤ (Bạn chỉnh sửa/thêm mới ở đây)
         const apps = [
             {
-                name: "VONG QUAY MAY MẮN",
+                name: "VÒNG QUAY MAY MẮN",
                 category: "Chat",
-                desc: "Trợ lý ảo mạnh mẽ nhất. Dùng để viết email, lên ý tưởng, tóm tắt văn bản.",
-                link: "vongquay.html"
+                desc: " Cài đặt vòng quay nhanh chóng , chính xác",
+                link: "./vongquay.html"
             },
             {
-                name: "Auto Infographic Maker By Shinichi Kudo",
+                name: "Gemini (Google)",
                 category: "Chat",
-                desc: "Công cụ làm báo cáo chuẩn inforgraphic giao diện đẹp.",
-                link: "https://gemini.google.com/gem/1wLALVjb0v6axqi3ui_7K_LV7bUmpZ9uF?usp=sharing"
+                desc: "AI của Google. Rất giỏi tìm kiếm thông tin thời gian thực và xử lý tiếng Việt.",
+                link: "https://gemini.google.com"
             },
             {
-                name: "PDF TO IMAGE OFFLINE",
+          name: "PDF TO IMAGE OFFLINE",
                 category: "Design",
                 desc: "Xuất file pdf thành hình ảnh nhanh chóng. max 100 image.",
-                link: pdf-to-image.html"
+                link: "./pdf-to-image.html"
             },
             {
-                name: "QUẢN LÝ VÉ",
+                name: "ChatPDF",
                 category: "Office",
-                desc: "Ứng dụng quản lý vé mua bán nội bộ.",
-                link: "quan-ly-ve.html"
+                desc: "Tải file PDF lên và hỏi đáp nội dung trong đó. Cực tốt để đọc hợp đồng/tài liệu.",
+                link: "https://www.chatpdf.com"
             },
             {
                 name: "DeepL Translate",
@@ -239,7 +252,3 @@
     </script>
 </body>
 </html>
-
-
-
-
