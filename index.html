@@ -3,111 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM OVERRIDE // C# KERNEL</title>
+    <title>FUTURE TECH // ACCESS PORTAL</title>
     <style>
         /* Reset & Setup */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: #000;
-            color: #39ff14; /* Neon Green */
-            font-family: 'Consolas', 'Courier New', monospace;
+            /* Nền Gradient vũ trụ sâu thẳm hơn */
+            background: linear-gradient(135deg, #050510, #1a1a3a, #101025);
+            color: #00d2ff; /* Cyan Blue */
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
         }
 
-        /* Canvas: Thêm filter drop-shadow nhẹ để chữ có độ phát sáng (Glow effect) */
+        /* Canvas: Hiệu ứng hạt */
         canvas {
             display: block;
             position: absolute;
             top: 0;
             left: 0;
             z-index: 1;
-            filter: drop-shadow(0 0 2px #39ff14);
         }
 
-        /* Overlay tối màu */
+        /* Overlay */
         #overlay {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.5); /* Giảm độ tối một chút để thấy sao rõ hơn */
             z-index: 2;
             opacity: 0;
-            transition: opacity 0.8s ease;
+            transition: opacity 1s ease;
             pointer-events: none;
         }
 
-        /* Terminal Popup Style */
+        /* Popup Style - Glassmorphism (Kính mờ) */
         #terminal-popup {
             position: absolute;
             top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 90%; max-width: 700px;
-            background-color: rgba(10, 10, 10, 0.95);
-            border: 1px solid #39ff14;
-            box-shadow: 0 0 40px rgba(57, 255, 20, 0.15);
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 650px;
+            /* Hiệu ứng kính mờ sang trọng - Giảm opacity nền xuống 0.2 để trong suốt hẳn */
+            background: rgba(15, 15, 30, 0.2);
+            /* Giữ blur nhẹ để chữ vẫn dễ đọc trên nền hạt */
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            box-shadow: 0 0 60px rgba(0, 210, 255, 0.1);
             z-index: 3;
-            border-radius: 6px;
+            border-radius: 12px;
             display: none;
             flex-direction: column;
             overflow: hidden;
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            backdrop-filter: blur(5px);
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* Header của Terminal */
+        /* Header của Popup */
         .terminal-header {
-            background: #151515;
-            padding: 10px 15px;
-            border-bottom: 1px solid #333;
+            background: rgba(0, 0, 0, 0.2); /* Header tối hơn một chút để phân biệt */
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
-            color: #888;
-            font-weight: bold;
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            font-weight: 500;
             letter-spacing: 1px;
         }
 
         .controls { display: flex; gap: 8px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
-        .red { background: #ff5555; }
-        .yellow { background: #f1fa8c; }
-        .green { background: #50fa7b; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
 
-        /* Nội dung Terminal */
+        /* Nội dung Popup */
         .terminal-body {
-            padding: 25px;
-            color: #f8f8f2;
-            font-size: 1.15rem;
-            line-height: 1.6;
+            padding: 30px;
+            color: #fff;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            font-family: 'Consolas', monospace; /* Giữ font code cho phần nội dung nhập */
         }
 
         .log-entry {
-            color: #6272a4;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            font-family: 'Consolas', monospace;
+            color: #7b88a8;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            border-left: 2px solid #00d2ff;
+            padding-left: 10px;
         }
         
-        .success { color: #50fa7b; }
+        .highlight { color: #00d2ff; font-weight: bold; text-shadow: 0 0 5px rgba(0, 210, 255, 0.5); }
 
         /* Vùng nhập lệnh */
         .input-wrapper {
             display: flex;
             align-items: center;
-            margin-top: 30px;
-            border-top: 1px solid #333;
-            padding-top: 15px;
+            margin-top: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #00d2ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
         }
 
         .prompt-label {
-            color: #ff79c6; /* Màu hồng tím kiểu Dracula theme */
+            color: #ff79c6; 
             font-weight: bold;
-            margin-right: 10px;
+            margin-right: 12px;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            text-shadow: 0 0 5px rgba(255, 121, 198, 0.4);
         }
 
         input[type="text"] {
@@ -115,7 +131,7 @@
             border: none;
             color: #fff;
             font-family: inherit;
-            font-size: 1.1rem;
+            font-size: 1rem;
             flex-grow: 1;
             outline: none;
         }
@@ -123,11 +139,12 @@
         /* Hiệu ứng con trỏ nhấp nháy */
         .cursor-blink {
             display: inline-block;
-            width: 10px; height: 20px;
-            background: #f8f8f2;
+            width: 2px; height: 1.2em;
+            background: #00d2ff;
+            box-shadow: 0 0 5px #00d2ff;
             animation: blink 1s infinite;
-            vertical-align: middle;
-            margin-left: 5px;
+            vertical-align: text-bottom;
+            margin-left: 2px;
         }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -137,7 +154,7 @@
 </head>
 <body>
 
-    <canvas id="matrix"></canvas>
+    <canvas id="particles"></canvas>
 
     <div id="overlay"></div>
 
@@ -148,109 +165,164 @@
                 <div class="dot yellow"></div>
                 <div class="dot green"></div>
             </div>
-            <span>ROOT_ACCESS_TERMINAL // v2.4.0</span>
+            <span>SECURE_CONNECTION // ENCRYPTED</span>
         </div>
         
         <div class="terminal-body">
             <div class="log-entry">
-                > Initializing C# Compiler... <span class="success">OK</span><br>
-                > Loading Libraries (System.IO, System.Net)... <span class="success">LOADED</span><br>
-                > Executing Main() Entry Point... <span class="success">RUNNING</span>
+                System Status: <span class="highlight">ONLINE</span><br>
+                Secure Gateway: <span class="highlight">ESTABLISHED</span><br>
+                Neural Link: <span class="highlight">CONNECTED (99.9%)</span>
             </div>
             
-            <div style="margin-top: 20px;">
+            <div style="min-height: 80px;">
                 <span id="type-text"></span><span class="cursor-blink"></span>
             </div>
 
             <div class="input-wrapper">
                 <span class="prompt-label">tuân thủ điều khoản để sử dụng</span>
-                <input type="text" id="cmd-input" placeholder="Awaiting command..." autocomplete="off">
+                <input type="text" id="cmd-input" placeholder="Nhấn Enter để xác nhận..." autocomplete="off">
             </div>
         </div>
     </div>
 
     <script>
-        // --- MATRIX RAIN CONFIGURATION (HORIZONTAL) ---
-        const canvas = document.getElementById('matrix');
+        // --- PARTICLE NETWORK CONFIGURATION (Hiệu ứng mạng lưới tinh tú) ---
+        const canvas = document.getElementById('particles');
         const ctx = canvas.getContext('2d');
 
-        // Fullscreen Canvas
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // BỘ KÝ TỰ C# STYLE (Thay thế Katakana bằng Syntax C#)
-        const latinUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const latinLower = 'abcdefghijklmnopqrstuvwxyz'; // Code thường có chữ thường
-        const nums = '0123456789';
-        // Các ký tự đặc trưng trong lập trình C#
-        const csharpSymbols = '{};()[]!=+-*/.,<>|&?#$@'; 
-        
-        const alphabet = latinUpper + latinLower + nums + csharpSymbols;
+        let particlesArray;
 
-        const fontSize = 14; 
-        const rows = Math.ceil(canvas.height / fontSize);
-
-        // State cho mỗi dòng
-        const streams = [];
-        const speeds = [];
-        
-        // Khởi tạo
-        for(let i = 0; i < rows; i++) {
-            streams[i] = Math.random() * canvas.width; // Vị trí X ngẫu nhiên
-            speeds[i] = (Math.random() * 8) + 5; // Tốc độ cực nhanh
+        // Cấu hình chuột
+        let mouse = {
+            x: null,
+            y: null,
+            radius: (canvas.height/80) * (canvas.width/80)
         }
 
-        function draw() {
-            // Tạo hiệu ứng đuôi mờ (Trail Effect)
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        window.addEventListener('mousemove', 
+            function(event) {
+                mouse.x = event.x;
+                mouse.y = event.y;
+            }
+        );
 
-            ctx.font = 'bold ' + fontSize + 'px Consolas, monospace';
-            ctx.textBaseline = 'top';
-
-            for(let i = 0; i < rows; i++) {
-                // Random ký tự từ bộ C#
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        // Tạo class Particle (Hạt)
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            // Phương thức vẽ hạt
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
                 
-                // Hiệu ứng màu sắc:
-                // Đầu dòng màu trắng sáng
-                const isHead = Math.random() > 0.9;
-
-                if(isHead) {
-                    ctx.fillStyle = '#FFF'; 
-                    ctx.shadowBlur = 10;    
-                    ctx.shadowColor = '#FFF';
-                } else {
-                    ctx.fillStyle = '#39ff14'; // Neon Green
-                    ctx.shadowBlur = 0;       
+                // --- THÊM HIỆU ỨNG PHÁT SÁNG (GLOW) ---
+                ctx.shadowBlur = 10; 
+                ctx.shadowColor = '#00d2ff';
+                
+                ctx.fillStyle = '#00d2ff'; // Màu hạt (Cyan)
+                ctx.fill();
+                
+                // Reset shadow để không ảnh hưởng các phần vẽ khác (nếu có)
+                ctx.shadowBlur = 0;
+            }
+            // Phương thức cập nhật vị trí hạt
+            update() {
+                // Kiểm tra va chạm biên màn hình
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
                 }
 
-                // Vẽ ký tự
-                ctx.fillText(text, streams[i], i * fontSize);
+                // Di chuyển hạt
+                this.x += this.directionX;
+                this.y += this.directionY;
+                
+                // Vẽ hạt
+                this.draw();
+            }
+        }
 
-                // Di chuyển sang phải
-                streams[i] += speeds[i];
+        // Khởi tạo mảng hạt
+        function init() {
+            particlesArray = [];
+            // --- TĂNG MẬT ĐỘ HẠT ---
+            // Giảm số chia từ 9000 xuống 4000 để tăng số lượng hạt gấp đôi
+            let numberOfParticles = (canvas.height * canvas.width) / 4500;
+            
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 0.5; // Kích thước hạt nhỏ hơn chút cho tinh tế
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                // Tốc độ chậm lại một chút để tạo cảm giác trôi nổi trong không gian
+                let directionX = (Math.random() * 1.5) - 0.75; 
+                let directionY = (Math.random() * 1.5) - 0.75; 
+                let color = '#00d2ff';
 
-                // Reset khi chạy hết màn hình
-                if(streams[i] > canvas.width) {
-                    streams[i] = -50; 
-                    speeds[i] = (Math.random() * 8) + 5; 
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Vòng lặp Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect(); // Vẽ đường nối
+        }
+
+        // Hàm nối các hạt gần nhau
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                    + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    
+                    // Giảm khoảng cách kết nối một chút để tránh rối mắt khi mật độ cao
+                    if (distance < (canvas.width/9) * (canvas.height/9)) {
+                        opacityValue = 1 - (distance / 15000);
+                        // Đường nối mảnh hơn
+                        ctx.strokeStyle = 'rgba(0, 210, 255,' + opacityValue + ')'; 
+                        ctx.lineWidth = 0.5; 
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
                 }
             }
         }
 
-        // Chạy vòng lặp (30ms ~ 33fps)
-        const animation = setInterval(draw, 30);
+        // Khởi chạy
+        init();
+        animate();
 
-        // Resize handler
+        // Xử lý Resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            mouse.radius = ((canvas.height/80) * (canvas.height/80));
+            init();
         });
 
-        // --- POPUP INTERACTION ---
+        // --- POPUP INTERACTION (GIỮ NGUYÊN LOGIC) ---
         const message = "Chào mừng bạn đến với công cụ của tôi.\nSẽ có những công cụ tốn phí 20$ để thực hiện không giới hạn trong ngày.\nBạn đồng ý vui lòng nhấn enter nhé !";
-        const typeSpeed = 30; // Gõ nhanh hơn
+        const typeSpeed = 30;
         let charIndex = 0;
         const textElement = document.getElementById("type-text");
         const inputElement = document.getElementById("cmd-input");
@@ -266,48 +338,36 @@
                 charIndex++;
                 setTimeout(typeWriter, typeSpeed);
             } else {
-                // Focus vào input sau khi gõ xong
                 inputElement.focus();
             }
         }
 
-        // Sequence hiển thị
         setTimeout(() => {
-            // 1. Hiện overlay
             document.getElementById('overlay').classList.add('visible');
-            
-            // 2. Hiện Popup
             const popup = document.getElementById('terminal-popup');
             popup.style.display = 'flex';
             
-            // Timeout nhỏ để transition hoạt động
             setTimeout(() => {
                 popup.classList.add('visible');
-                // 3. Bắt đầu gõ chữ
                 typeWriter();
             }, 50);
 
-        }, 2500); // Popup hiện sau 2.5s
+        }, 2000); // Hiện sau 2 giây cho mượt
 
         // Xử lý Input
         inputElement.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
-                // Ngăn hành vi mặc định và vô hiệu hóa ô input để tránh spam
                 event.preventDefault();
                 this.disabled = true;
 
-                // Hiệu ứng hiển thị xác nhận trên màn hình
+                // Thay đổi màu thông báo xác nhận cho phù hợp theme mới
                 textElement.innerHTML += `<br><span style="color:#ff79c6;">tuân thủ điều khoản để sử dụng</span> [CONFIRMED]`;
-                textElement.innerHTML += `<br><span style="color:#50fa7b;">> Payment Terms Accepted. Redirecting to Mainframe...</span>`;
+                textElement.innerHTML += `<br><span style="color:#00d2ff;">> Payment Terms Accepted. Redirecting...</span>`;
                 
-                // Tự động cuộn xuống cuối nếu nội dung dài
                 const terminalBody = document.querySelector('.terminal-body');
                 terminalBody.scrollTop = terminalBody.scrollHeight;
 
-                // Đợi 1.5 giây để người dùng kịp đọc thông báo rồi mới chuyển trang
                 setTimeout(() => {
-                    // --- ĐIỀU HƯỚNG SANG TRANG HOME.HTML ---
-                    // Lưu ý: Đảm bảo trang chủ cũ của bạn đã được đổi tên thành home.html
                     window.location.href = "./home.html"; 
                 }, 1500);
             }
