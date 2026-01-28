@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM OVERRIDE // C# KERNEL</title>
+    <style>
+        /* Reset & Setup */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #000;
+            color: #39ff14; /* Neon Green */
+            font-family: 'Consolas', 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Canvas: Thêm filter drop-shadow nhẹ để chữ có độ phát sáng (Glow effect) */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            filter: drop-shadow(0 0 2px #39ff14);
+        }
+
+        /* Overlay tối màu */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            pointer-events: none;
+        }
+
+        /* Terminal Popup Style */
+        #terminal-popup {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%; max-width: 700px;
+            background-color: rgba(10, 10, 10, 0.95);
+            border: 1px solid #39ff14;
+            box-shadow: 0 0 40px rgba(57, 255, 20, 0.15);
+            z-index: 3;
+            border-radius: 6px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Header của Terminal */
+        .terminal-header {
+            background: #151515;
+            padding: 10px 15px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .controls { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .red { background: #ff5555; }
+        .yellow { background: #f1fa8c; }
+        .green { background: #50fa7b; }
+
+        /* Nội dung Terminal */
+        .terminal-body {
+            padding: 25px;
+            color: #f8f8f2;
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            color: #6272a4;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .success { color: #50fa7b; }
+
+        /* Vùng nhập lệnh */
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+
+        .prompt-label {
+            color: #ff79c6; /* Màu hồng tím kiểu Dracula theme */
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            background: none;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1.1rem;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        /* Hiệu ứng con trỏ nhấp nháy */
+        .cursor-blink {
+            display: inline-block;
+            width: 10px; height: 20px;
+            background: #f8f8f2;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .visible { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; pointer-events: auto !important; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix"></canvas>
+
+    <div id="overlay"></div>
+
+    <div id="terminal-popup">
+        <div class="terminal-header">
+            <div class="controls">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <span>ROOT_ACCESS_TERMINAL // v2.4.0</span>
+        </div>
+        
+        <div class="terminal-body">
+            <div class="log-entry">
+                > Initializing C# Compiler... <span class="success">OK</span><br>
+                > Loading Libraries (System.IO, System.Net)... <span class="success">LOADED</span><br>
+                > Executing Main() Entry Point... <span class="success">RUNNING</span>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <span id="type-text"></span><span class="cursor-blink"></span>
+            </div>
+
+            <div class="input-wrapper">
+                <span class="prompt-label">tuân thủ điều khoản để sử dụng</span>
+                <input type="text" id="cmd-input" placeholder="Awaiting command..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MATRIX RAIN CONFIGURATION (HORIZONTAL) ---
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        // Fullscreen Canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // BỘ KÝ TỰ C# STYLE (Thay thế Katakana bằng Syntax C#)
+        const latinUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const latinLower = 'abcdefghijklmnopqrstuvwxyz'; // Code thường có chữ thường
+        const nums = '0123456789';
+        // Các ký tự đặc trưng trong lập trình C#
+        const csharpSymbols = '{};()[]!=+-*/.,<>|&?#$@'; 
+        
+        const alphabet = latinUpper + latinLower + nums + csharpSymbols;
+
+        const fontSize = 14; 
+        const rows = Math.ceil(canvas.height / fontSize);
+
+        // State cho mỗi dòng
+        const streams = [];
+        const speeds = [];
+        
+        // Khởi tạo
+        for(let i = 0; i < rows; i++) {
+            streams[i] = Math.random() * canvas.width; // Vị trí X ngẫu nhiên
+            speeds[i] = (Math.random() * 8) + 5; // Tốc độ cực nhanh
+        }
+
+        function draw() {
+            // Tạo hiệu ứng đuôi mờ (Trail Effect)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = 'bold ' + fontSize + 'px Consolas, monospace';
+            ctx.textBaseline = 'top';
+
+            for(let i = 0; i < rows; i++) {
+                // Random ký tự từ bộ C#
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                
+                // Hiệu ứng màu sắc:
+                // Đầu dòng màu trắng sáng
+                const isHead = Math.random() > 0.9;
+
+                if(isHead) {
+                    ctx.fillStyle = '#FFF'; 
+                    ctx.shadowBlur = 10;    
+                    ctx.shadowColor = '#FFF';
+                } else {
+                    ctx.fillStyle = '#39ff14'; // Neon Green
+                    ctx.shadowBlur = 0;       
+                }
+
+                // Vẽ ký tự
+                ctx.fillText(text, streams[i], i * fontSize);
+
+                // Di chuyển sang phải
+                streams[i] += speeds[i];
+
+                // Reset khi chạy hết màn hình
+                if(streams[i] > canvas.width) {
+                    streams[i] = -50; 
+                    speeds[i] = (Math.random() * 8) + 5; 
+                }
+            }
+        }
+
+        // Chạy vòng lặp (30ms ~ 33fps)
+        const animation = setInterval(draw, 30);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // --- POPUP INTERACTION ---
+        const message = "Chào mừng bạn đến với công cụ của tôi.\nSẽ có những công cụ tốn phí 20$ để thực hiện không giới hạn trong ngày.\nBạn đồng ý vui lòng nhấn enter nhé !";
+        const typeSpeed = 30; // Gõ nhanh hơn
+        let charIndex = 0;
+        const textElement = document.getElementById("type-text");
+        const inputElement = document.getElementById("cmd-input");
+
+        function typeWriter() {
+            if (charIndex < message.length) {
+                const char = message.charAt(charIndex);
+                if (char === '\n') {
+                    textElement.innerHTML += '<br>';
+                } else {
+                    textElement.innerHTML += char;
+                }
+                charIndex++;
+                setTimeout(typeWriter, typeSpeed);
+            } else {
+                // Focus vào input sau khi gõ xong
+                inputElement.focus();
+            }
+        }
+
+        // Sequence hiển thị
+        setTimeout(() => {
+            // 1. Hiện overlay
+            document.getElementById('overlay').classList.add('visible');
+            
+            // 2. Hiện Popup
+            const popup = document.getElementById('terminal-popup');
+            popup.style.display = 'flex';
+            
+            // Timeout nhỏ để transition hoạt động
+            setTimeout(() => {
+                popup.classList.add('visible');
+                // 3. Bắt đầu gõ chữ
+                typeWriter();
+            }, 50);
+
+        }, 2500); // Popup hiện sau 2.5s
+
+        // Xử lý Input
+        inputElement.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                // Ngăn hành vi mặc định và vô hiệu hóa ô input để tránh spam
+                event.preventDefault();
+                this.disabled = true;
+
+                // Hiệu ứng hiển thị xác nhận trên màn hình
+                textElement.innerHTML += `<br><span style="color:#ff79c6;">tuân thủ điều khoản để sử dụng</span> [CONFIRMED]`;
+                textElement.innerHTML += `<br><span style="color:#50fa7b;">> Payment Terms Accepted. Redirecting to Mainframe...</span>`;
+                
+                // Tự động cuộn xuống cuối nếu nội dung dài
+                const terminalBody = document.querySelector('.terminal-body');
+                terminalBody.scrollTop = terminalBody.scrollHeight;
+
+                // Đợi 1.5 giây để người dùng kịp đọc thông báo rồi mới chuyển trang
+                setTimeout(() => {
+                    // --- ĐIỀU HƯỚNG SANG TRANG HOME.HTML ---
+                    // Lưu ý: Đảm bảo trang chủ cũ của bạn đã được đổi tên thành home.html
+                    window.location.href = "./home.html"; 
+                }, 1500);
+            }
+        });
+
+    </script>
+</body>
+</html>
